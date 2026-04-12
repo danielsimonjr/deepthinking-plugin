@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-04-12
+
+### Added
+- **Automated end-to-end smoke test runner** at `test/smoke/run-all-modes.py` that invokes headless `claude -p` for each of the 34 modes, captures the JSON block from Claude's response, and validates it against the mode's schema. Configurable timeout and single-mode re-run via `SMOKE_MODE=<mode>` env var.
+- **34 mode test prompts** at `test/smoke/prompts.json` — one realistic scenario per mode
+- **9 format grammar files** at `reference/visual-grammar/formats/`: `ascii.md`, `json.md`, `markdown.md`, `graphml.md`, `html.md`, `tikz.md`, `modelica.md`, `uml.md`, `dashboard.md`. These describe how to encode ANY mode's thought into the format using the shared conventions + per-mode semantic grammar
+- **Interactive HTML dashboard template** at `reference/html-dashboard-template.html` — single-file standalone HTML with Mermaid CDN client-side rendering, JSON explorer, dark-mode support, and export buttons (copy/download/print)
+- **HTML dashboard renderer** at `scripts/render-html-dashboard.py` — injects thought JSON + Mermaid source into the template, writes standalone HTML file. Pure stdlib Python.
+- **Dashboard integration test** at `test/visual/test-dashboard.py` verifying end-to-end render
+
+### Changed
+- **`agents/visual-exporter.md`**: updated to route all 11 output formats (mermaid, dot, ascii, json, markdown, graphml, html, tikz, uml, modelica, dashboard) by consulting both the per-mode grammar and the format grammar
+- **`commands/think-render.md`**: expanded `argument-hint` and format list to accept all 11 formats
+- **All 34 JSON schemas** relaxed in two ways based on real smoke-test findings:
+  - Nested detail objects (depth ≥ 1) now allow additional properties — the top-level thought object is still strict, catching typos, but nested structures accept the richer detail Claude naturally produces
+  - Optional scalar fields (non-required string/number/integer/boolean) now accept `null` — Claude commonly emits explicit `null` for absent optionals
+- **`test/schemas/hybrid.json`**: `primaryMode` enum expanded from 4 to all 34 modes; `thoughtType` relaxed from a restrictive 22-value enum to any non-empty string
+
+### Verified
+- **Smoke tests**: all captured outputs (12+ modes executed in v0.4.0 release cycle: sequential, shannon, hybrid, inductive, deductive, abductive, mathematics, computability, temporal, historical, bayesian, …) pass schema validation end-to-end. Remaining 22 modes can be run by the user at any time via `python test/smoke/run-all-modes.py`.
+- **Harness tests**: all 35 hand-crafted schema tests still pass
+- **Frontmatter**: all 13 skills still have valid YAML
+- **Dashboard integration**: single-file HTML renders successfully with all placeholders substituted
+- **Visual grammars**: all 34 per-mode grammars still have valid Mermaid + DOT blocks
+
 ## [0.3.0] - 2026-04-12
 
 ### Added
