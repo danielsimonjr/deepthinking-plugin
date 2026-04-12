@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HybridThought",
+  "type": "object",
+  "required": ["mode", "thoughtNumber", "totalThoughts", "content", "nextThoughtNeeded", "primaryMode", "secondaryFeatures"],
+  "properties": {
+    "mode": { "const": "hybrid" },
+    "thoughtNumber": { "type": "integer", "minimum": 1 },
+    "totalThoughts": { "type": "integer", "minimum": 1 },
+    "content": { "type": "string", "minLength": 1 },
+    "nextThoughtNeeded": { "type": "boolean" },
+    "primaryMode": {
+      "type": "string",
+      "enum": ["sequential", "shannon", "mathematics", "physics"]
+    },
+    "secondaryFeatures": { "type": "array", "items": { "type": "string" } },
+    "thoughtType": {
+      "type": "string",
+      "enum": [
+        "problem_definition", "constraints", "model", "proof", "implementation",
+        "axiom_definition", "theorem_statement", "proof_construction", "lemma_derivation",
+        "corollary", "counterexample", "algebraic_manipulation", "symbolic_computation",
+        "numerical_analysis", "symmetry_analysis", "gauge_theory",
+        "mode_selection", "parallel_analysis", "sequential_analysis",
+        "convergence_check", "confidence_assessment", "mode_switching"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["problem_definition", "constraints", "model", "proof", "implementation"]
+    },
+    "uncertainty": { "type": "number", "minimum": 0, "maximum": 1 },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "revisionReason": { "type": "string" },
+    "switchReason": { "type": "string" },
+    "mathematicalModel": {
+      "type": "object",
+      "required": ["latex", "symbolic"],
+      "properties": {
+        "latex": { "type": "string" },
+        "symbolic": { "type": "string" },
+        "ascii": { "type": "string" },
+        "tensorRank": { "type": "integer" },
+        "dimensions": { "type": "array", "items": { "type": "integer" } },
+        "invariants": { "type": "array", "items": { "type": "string" } },
+        "symmetries": { "type": "array", "items": { "type": "string" } },
+        "complexity": { "type": "string" },
+        "stabilityNotes": { "type": "string" },
+        "validated": { "type": "boolean" },
+        "validationMethod": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "tensorProperties": {
+      "type": "object",
+      "required": ["rank", "components", "latex", "symmetries", "invariants", "transformation"],
+      "properties": {
+        "rank": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "components": { "type": "string" },
+        "latex": { "type": "string" },
+        "symmetries": { "type": "array", "items": { "type": "string" } },
+        "invariants": { "type": "array", "items": { "type": "string" } },
+        "transformation": {
+          "type": "string",
+          "enum": ["covariant", "contravariant", "mixed"]
+        },
+        "indexStructure": { "type": "string" },
+        "coordinateSystem": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "physicalInterpretation": {
+      "type": "object",
+      "required": ["quantity", "units", "conservationLaws"],
+      "properties": {
+        "quantity": { "type": "string" },
+        "units": { "type": "string" },
+        "conservationLaws": { "type": "array", "items": { "type": "string" } },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "observables": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "isRevision": { "type": "boolean" },
+    "revisesThought": { "type": "string" },
+    "branchFrom": { "type": "string" },
+    "branchId": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "importance": { "type": "number" }
+  },
+  "additionalProperties": false
+}
