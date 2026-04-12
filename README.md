@@ -8,23 +8,50 @@ Structured reasoning methods for Claude Code. This plugin teaches Claude 34 reas
 
 ## Install
 
-Install locally for development:
+### Development (load from a local directory)
 
-    claude --plugin-dir "C:/Users/danie/Dropbox/Github/deepthinking-plugin"
+    claude --plugin-dir "C:/path/to/deepthinking-plugin"
+
+### Permanent install
+
+Copy the plugin directory into your personal plugins folder:
+
+    cp -r deepthinking-plugin ~/.claude/plugins/
+
+Claude Code will auto-discover it on the next session. No `--plugin-dir` flag needed.
+
+### Optional: shorter `/think` alias
+
+After installing the plugin, all commands are namespaced as `/deepthinking-plugin:think`. If you want the shorter bare `/think` form, copy the example personal command alias:
+
+**Windows (PowerShell):**
+
+    Copy-Item "examples/personal-command-alias/think.md" "$env:USERPROFILE\.claude\commands\think.md"
+
+**macOS / Linux:**
+
+    mkdir -p ~/.claude/commands
+    cp examples/personal-command-alias/think.md ~/.claude/commands/think.md
+
+See `examples/personal-command-alias/README.md` for details.
 
 ## Usage
 
-Invoke a specific mode:
+### Canonical form (works after plugin install)
+
+    /deepthinking-plugin:think sequential "Break down the steps to migrate this database"
+    /deepthinking-plugin:think inductive "Given these three incidents (A, B, C), what pattern do they share?"
+    /deepthinking-plugin:think deductive "If all users in admin can edit posts and Alice is in admin, can Alice edit posts?"
+    /deepthinking-plugin:think "Why did the last three deployments fail?"
+
+### Short form (requires the optional personal alias installed above)
 
     /think sequential "Break down the steps to migrate this database"
-    /think inductive "Given these three incidents, what pattern do they share?"
-    /think deductive "If all users in the admin group can edit posts, and Alice is in the admin group, can Alice edit posts?"
-
-Or let the router auto-recommend:
-
+    /think inductive "Given these three incidents (A, B, C), what pattern do they share?"
+    /think deductive "If all users in admin can edit posts and Alice is in admin, can Alice edit posts?"
     /think "Why did the last three deployments fail?"
 
-Each invocation produces a structured JSON output matching the mode's schema. See `reference/output-formats/` for per-mode schemas and examples.
+Both forms produce the same structured JSON output matching the mode's schema. See `reference/output-formats/` for per-mode schemas and worked examples.
 
 ## Testing
 

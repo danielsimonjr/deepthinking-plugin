@@ -21,3 +21,7 @@ All notable changes to this project will be documented in this file.
 - `/think inductive "..."` → schema-valid with calibrated confidence (0.8) and counterexample reasoning
 - `/think deductive "..."` → schema-valid with FOL notation and operational soundness caveats
 - `/think "..."` (auto-recommend) → correctly defers to sequential when observations are referenced but not supplied, with explicit mode-handoff plan in thought 3
+
+### Install paths (documented in README)
+- Canonical plugin command: `/deepthinking-plugin:think [mode] "<problem>"` (available after installing the plugin via `--plugin-dir` or by copying to `~/.claude/plugins/`)
+- Optional shorter alias: personal command at `~/.claude/commands/think.md` (provided in `examples/personal-command-alias/`) gives the bare `/think` form
