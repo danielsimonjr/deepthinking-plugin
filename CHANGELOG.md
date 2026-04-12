@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-04-12
+
+### Added
+- **Visual export for all 34 modes** via the new `/think-render [format]` slash command at `commands/think-render.md`
+- `agents/visual-exporter.md` — subagent that converts structured thoughts to diagram source by reading per-mode visual grammar
+- `reference/visual-grammar.md` — shared conventions (node shapes, color palette, edge semantics, label rules, layout hints) with worked Mermaid and DOT examples
+- `reference/visual-grammar/*.md` — **34 per-mode grammar files**, each with a Node Structure section, Edge Semantics, Mermaid template, DOT template, and a worked example using the actual field values from the corresponding reference/output-formats sample
+- `scripts/render-diagram.py` — wraps `graphviz` (DOT → SVG/PNG) and `@mermaid-js/mermaid-cli` (Mermaid → SVG/PNG). **Gracefully degrades** to printing source on stdout with install hint when binaries aren't available
+- `test/visual/validate-mermaid.py` — syntactic validator that checks every grammar file's Mermaid blocks parse
+- `test/visual/validate-dot.py` — syntactic validator that checks every grammar file's DOT blocks parse
+- README section documenting `/think-render` usage and optional external binary installation
+
+### Verified
+- **68 visual checks pass** (34 grammar files × 2 formats): every mode has ≥2 valid Mermaid blocks and ≥2 valid DOT blocks (template + worked example)
+- `render-diagram.py` runs without crashing when binaries are missing (graceful degradation confirmed)
+- All 35 schema validations still pass, all 13 SKILL.md frontmatters still valid
+
 ## [0.2.0] - 2026-04-12
 
 ### Added

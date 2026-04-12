@@ -53,6 +53,29 @@ See `examples/personal-command-alias/README.md` for details.
 
 Both forms produce the same structured JSON output matching the mode's schema. See `reference/output-formats/` for per-mode schemas and worked examples.
 
+### Rendering diagrams (v0.3.0+)
+
+After any `/think` invocation, render the output as a diagram:
+
+    /think-render                  # default: mermaid
+    /think-render dot              # DOT source
+    /think-render svg              # SVG (requires `dot` on PATH)
+    /think-render png              # PNG (requires `mmdc` on PATH)
+
+The `/think-render` command invokes the `visual-exporter` agent, which reads the per-mode grammar at `reference/visual-grammar/<mode>.md` and produces diagram source from your most recent structured thought. For SVG/PNG output, it pipes the source through `scripts/render-diagram.py` which wraps external binaries.
+
+**Install optional diagram binaries:**
+
+    # Graphviz (for DOT -> SVG/PNG)
+    winget install Graphviz.Graphviz       # Windows
+    brew install graphviz                   # macOS
+    apt install graphviz                    # Linux
+
+    # Mermaid CLI (for Mermaid -> SVG/PNG)
+    npm install -g @mermaid-js/mermaid-cli
+
+The render script **gracefully degrades** when binaries are missing — it prints the source to stdout with an install hint, so diagrams still work at the source level.
+
 ## Testing
 
     cd test && python harness.py
