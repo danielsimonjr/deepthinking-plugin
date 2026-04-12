@@ -103,6 +103,15 @@
       "items": {
         "type": "string"
       }
+    },
+    "falsificationCriteria": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ],
+      "description": "What observation would falsify the hypothesis"
     }
   },
   "additionalProperties": false

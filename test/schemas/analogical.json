@@ -4,7 +4,6 @@
   "type": "object",
   "required": [
     "mode",
-    "sourceDomain",
     "targetDomain",
     "mappings",
     "analogyStrength"
@@ -96,24 +95,10 @@
         "properties": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": [
-              "entityId",
-              "name",
-              "value"
-            ],
-            "properties": {
-              "entityId": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": true
+            "type": [
+              "object",
+              "string"
+            ]
           }
         }
       },
@@ -202,24 +187,10 @@
         "properties": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": [
-              "entityId",
-              "name",
-              "value"
-            ],
-            "properties": {
-              "entityId": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": true
+            "type": [
+              "object",
+              "string"
+            ]
           }
         }
       },
@@ -323,7 +294,26 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1
+    },
+    "sourceDomains": {
+      "type": "array"
+    },
+    "analogyComparison": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "note": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

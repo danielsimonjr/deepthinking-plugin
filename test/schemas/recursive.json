@@ -251,6 +251,14 @@
         }
       },
       "additionalProperties": true
+    },
+    "haltingCondition": {
+      "type": [
+        "string",
+        "object",
+        "null"
+      ],
+      "description": "The condition under which the recursion terminates"
     }
   },
   "additionalProperties": false

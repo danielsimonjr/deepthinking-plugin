@@ -48,15 +48,32 @@ SINGLE_MODE = os.environ.get("SMOKE_MODE")
 
 JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.DOTALL)
 
+# Matches a lone backslash that is NOT part of a valid JSON escape sequence.
+# Valid escapes: \" \\ \/ \b \f \n \r \t \uXXXX
+INVALID_BACKSLASH_RE = re.compile(r'\\(?![\\"/bfnrtu])')
+
+
+def repair_lone_backslashes(source):
+    """Claude sometimes emits LaTeX-style escapes like `\ ` or `\mu` inside JSON
+    strings, which are invalid JSON. Double any backslash that isn't part of a
+    recognized escape sequence."""
+    return INVALID_BACKSLASH_RE.sub(r"\\\\", source)
+
 
 def extract_json_block(text):
-    """Return the first ```json ... ``` block parsed as Python, or None."""
+    """Return the first ```json ... ``` block parsed as Python, or None.
+
+    Tries strict JSON parsing first; on failure, applies a minimal repair pass
+    for lone backslashes (common in math/LaTeX output) and retries."""
     for match in JSON_BLOCK_RE.finditer(text):
         candidate = match.group(1).strip()
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
-            continue
+            try:
+                return json.loads(repair_lone_backslashes(candidate))
+            except json.JSONDecodeError:
+                continue
     return None
 
 
