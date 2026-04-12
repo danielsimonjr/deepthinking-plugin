@@ -1,0 +1,21 @@
+{
+  "name": "deepthinking-plugin",
+  "version": "0.1.0",
+  "description": "Structured reasoning skills for Claude Code. Teaches Claude 34 reasoning methods (Bayesian, causal, game theory, etc.) as prompt-based skills that produce typed thought outputs. Ports the deepthinking-mcp methodology into native Claude Code skills.",
+  "author": {
+    "name": "Daniel Simon Jr.",
+    "url": "https://github.com/danielsimonjr/deepthinking-plugin"
+  },
+  "license": "MIT",
+  "keywords": [
+    "reasoning",
+    "thinking",
+    "bayesian",
+    "causal",
+    "mcp-replacement"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielsimonjr/deepthinking-plugin"
+  }
+}
