@@ -1,5 +1,5 @@
 ---
-description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is sequential, inductive, deductive, or omitted for auto-recommend."
+description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is any of the 34 available modes or omitted for auto-recommend."
 argument-hint: "[mode] <problem>"
 ---
 
@@ -11,34 +11,90 @@ $ARGUMENTS
 
 ## What to do
 
-Parse the arguments above. The first word may be one of the three available modes in v0.1.0:
+Parse the arguments above. The first word may be one of the 34 available modes:
 
+**think-standard**
 - **`sequential`** — Iterative step-by-step reasoning. Breaking down a task into ordered thoughts with revision support.
+- **`shannon`** — Information-theoretic decomposition tracking uncertainty across 5 stages.
+- **`hybrid`** — Composing multiple modes for cross-cutting multidimensional problems.
+
+**think-core**
 - **`inductive`** — Reasoning from specific observations to general principles. Pattern recognition across cases.
 - **`deductive`** — Reasoning from established premises to specific conclusions. Formal logical inference.
+- **`abductive`** — Finding the best explanation among competing hypotheses for a surprising observation.
 
-If the first word is a recognized mode name, apply that method. If the first word is NOT a mode name (or no mode was given), treat the entire `$ARGUMENTS` as the problem and auto-recommend a mode using the decision tree below.
+**think-mathematics**
+- **`mathematics`** — Formal proofs, algebraic reasoning, mathematical modeling.
+- **`physics`** — Physical models, conservation laws, tensor analysis, symmetries.
+- **`computability`** — Decidability, complexity classes, Turing machines, reductions.
+
+**think-temporal**
+- **`temporal`** — Event ordering, time intervals, Allen relations, sequence vs. causation.
+- **`historical`** — Source reliability, precedent analysis, patterns across historical episodes.
+
+**think-probabilistic**
+- **`bayesian`** — Updating beliefs with evidence via Bayes' theorem (posterior calculation).
+- **`evidential`** — Multi-source evidence evaluation, Dempster-Shafer belief/plausibility.
+
+**think-causal**
+- **`causal`** — Cause-effect mechanisms, confounders, causal graphs.
+- **`counterfactual`** — What-if reasoning, interventions, alternative histories.
+
+**think-strategic**
+- **`gametheory`** — Multi-agent strategic interaction, Nash equilibria, payoff matrices.
+- **`optimization`** — Finding the best allocation given an objective and constraints.
+- **`constraint`** — Satisfying a set of hard rules (feasibility, not optimality).
+
+**think-analytical**
+- **`analogical`** — Mapping structural similarity between source and target domains.
+- **`firstprinciples`** — Decomposing to fundamental truths and rebuilding from axioms.
+- **`metareasoning`** — Reasoning ABOUT reasoning — monitoring and switching reasoning modes.
+- **`cryptanalytic`** — Signal-from-noise extraction, Decibans-weighted evidence, pattern breaking.
+
+**think-scientific**
+- **`scientificmethod`** — Hypothesis → prediction → experiment → observation → revision (falsifiability).
+- **`systemsthinking`** — Feedback loops, systems archetypes, leverage points, emergent behavior.
+- **`formallogic`** — Propositional and predicate logic, formal proof structures.
+
+**think-engineering**
+- **`engineering`** — Design trade-offs, FMEA, trade studies, constraint-driven decisions.
+- **`algorithmic`** — CLRS algorithm selection, complexity analysis, data structure choice.
+
+**think-academic**
+- **`synthesis`** — Integrating multiple sources with coverage tracking (literature review).
+- **`argumentation`** — Building arguments using the Toulmin model (claim/warrant/backing/rebuttal).
+- **`critique`** — Peer-review evaluation with Socratic questions and strengths/weaknesses.
+- **`analysis`** — Layered systematic decomposition (surface → structure → patterns → synthesis).
+
+**think-advanced**
+- **`recursive`** — Self-referential problem decomposition (base case + recursive case + halting).
+- **`modal`** — Possibility/necessity reasoning (alethic, epistemic, deontic modalities).
+- **`stochastic`** — Probability distributions, random processes, Monte Carlo analysis.
+
+If the first word is a recognized mode name, apply that method. If the first word is NOT a mode name (or no mode was given), treat the entire `$ARGUMENTS` as the problem and auto-recommend a mode.
+
+## Auto-Recommendation
+
+For auto-recommendation, consult the decision tree in `skills/think/mode-index.md`.
 
 ## Method Instructions
 
 Load the relevant category skill for background on the method:
 
-- **Sequential** → read `skills/think-standard/SKILL.md` in this plugin for the method description
-- **Inductive, Deductive** → read `skills/think-core/SKILL.md` for the method descriptions
+- **sequential, shannon, hybrid** → read `skills/think-standard/SKILL.md`
+- **inductive, deductive, abductive** → read `skills/think-core/SKILL.md`
+- **mathematics, physics, computability** → read `skills/think-mathematics/SKILL.md`
+- **temporal, historical** → read `skills/think-temporal/SKILL.md`
+- **bayesian, evidential** → read `skills/think-probabilistic/SKILL.md`
+- **causal, counterfactual** → read `skills/think-causal/SKILL.md`
+- **gametheory, optimization, constraint** → read `skills/think-strategic/SKILL.md`
+- **analogical, firstprinciples, metareasoning, cryptanalytic** → read `skills/think-analytical/SKILL.md`
+- **scientificmethod, systemsthinking, formallogic** → read `skills/think-scientific/SKILL.md`
+- **engineering, algorithmic** → read `skills/think-engineering/SKILL.md`
+- **synthesis, argumentation, critique, analysis** → read `skills/think-academic/SKILL.md`
+- **recursive, modal, stochastic** → read `skills/think-advanced/SKILL.md`
 
 Then read `reference/output-formats/<mode>.md` for the authoritative JSON schema the output must match.
-
-## Auto-Recommendation Decision Tree
-
-If no mode was specified, pick one using these signals:
-
-1. **Multiple observations provided, asking for pattern?** → `inductive`
-   - Signals: "what pattern", "in general", "these all show", "the last N X"
-2. **Explicit premises, asking if a conclusion follows?** → `deductive`
-   - Signals: "if X then Y", "given these rules", "can we conclude"
-3. **Complex task needing ordered steps or planning?** → `sequential`
-   - Signals: "break down", "plan", "steps to", "how should I approach"
-4. **None of the above clear?** → default to `sequential` and explain you're treating it as iterative planning.
 
 ## Output Format
 
@@ -74,13 +130,36 @@ The three deploy failures all occurred at the same phase with identical symptoms
 | Mode | Output schema |
 |---|---|
 | sequential | `reference/output-formats/sequential.md` |
+| shannon | `reference/output-formats/shannon.md` |
+| hybrid | `reference/output-formats/hybrid.md` |
 | inductive | `reference/output-formats/inductive.md` |
 | deductive | `reference/output-formats/deductive.md` |
-
-## Unavailable modes
-
-If the user names a mode not in v0.1.0 (e.g., `bayesian`, `causal`, `gametheory`), respond:
-
-> "The `<mode>` mode is not yet available in v0.1.0 of deepthinking-plugin. Currently available: sequential, inductive, deductive. Auto-recommending one of these for your problem instead."
-
-Then proceed with auto-recommendation.
+| abductive | `reference/output-formats/abductive.md` |
+| mathematics | `reference/output-formats/mathematics.md` |
+| physics | `reference/output-formats/physics.md` |
+| computability | `reference/output-formats/computability.md` |
+| temporal | `reference/output-formats/temporal.md` |
+| historical | `reference/output-formats/historical.md` |
+| bayesian | `reference/output-formats/bayesian.md` |
+| evidential | `reference/output-formats/evidential.md` |
+| causal | `reference/output-formats/causal.md` |
+| counterfactual | `reference/output-formats/counterfactual.md` |
+| gametheory | `reference/output-formats/gametheory.md` |
+| optimization | `reference/output-formats/optimization.md` |
+| constraint | `reference/output-formats/constraint.md` |
+| analogical | `reference/output-formats/analogical.md` |
+| firstprinciples | `reference/output-formats/firstprinciples.md` |
+| metareasoning | `reference/output-formats/metareasoning.md` |
+| cryptanalytic | `reference/output-formats/cryptanalytic.md` |
+| scientificmethod | `reference/output-formats/scientificmethod.md` |
+| systemsthinking | `reference/output-formats/systemsthinking.md` |
+| formallogic | `reference/output-formats/formallogic.md` |
+| engineering | `reference/output-formats/engineering.md` |
+| algorithmic | `reference/output-formats/algorithmic.md` |
+| synthesis | `reference/output-formats/synthesis.md` |
+| argumentation | `reference/output-formats/argumentation.md` |
+| critique | `reference/output-formats/critique.md` |
+| analysis | `reference/output-formats/analysis.md` |
+| recursive | `reference/output-formats/recursive.md` |
+| modal | `reference/output-formats/modal.md` |
+| stochastic | `reference/output-formats/stochastic.md` |

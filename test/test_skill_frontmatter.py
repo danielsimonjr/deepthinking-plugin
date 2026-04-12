@@ -27,7 +27,7 @@ def check_skill(skill_md):
 
 def main():
     skills = sorted(SKILLS_DIR.rglob("SKILL.md"))
-    assert len(skills) == 3, f"Expected 3 SKILL.md files, found {len(skills)}"
+    assert len(skills) == 13, f"Expected 13 SKILL.md files, found {len(skills)}"
     for s in skills:
         check_skill(s)
         print(f"PASS: {s.relative_to(PLUGIN_ROOT)}")
