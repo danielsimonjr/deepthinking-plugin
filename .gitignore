@@ -19,3 +19,11 @@ test/.pytest_cache/
 # Build
 dist/
 *.log
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
