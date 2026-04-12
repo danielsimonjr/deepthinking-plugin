@@ -1,0 +1,12 @@
+{
+  "mode": "inductive",
+  "observations": [
+    "Deploy on Monday 2026-04-06 failed with DB connection timeout",
+    "Deploy on Wednesday 2026-04-08 failed with DB connection timeout",
+    "Deploy on Friday 2026-04-10 failed with DB connection timeout"
+  ],
+  "pattern": "All recent deploys fail at the DB connection phase",
+  "generalization": "Recent production deploys consistently fail at the DB connection phase, suggesting a configuration or network issue introduced prior to 2026-04-06",
+  "confidence": 0.85,
+  "sampleSize": 3
+}
