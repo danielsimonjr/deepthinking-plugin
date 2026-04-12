@@ -1,9 +1,22 @@
 ---
 name: think
 description: Route a reasoning task to the appropriate thinking mode. Use when the user invokes `/think <mode?> "<problem>"` or asks for structured reasoning, critical analysis, Bayesian inference, causal analysis, inductive/deductive reasoning, hypothesis formation, or any form of disciplined thinking. Supports explicit mode selection (e.g., `/think bayesian ...`) and auto-recommendation (`/think ...`).
+argument-hint: "[mode] <problem>"
 ---
 
 # Think — Reasoning Router
+
+## User Invocation
+
+The user invoked this skill with the following arguments:
+
+```
+$ARGUMENTS
+```
+
+Parse the arguments above. The first word may be a mode name (`sequential`, `inductive`, or `deductive`). Everything else is the problem statement. If the first word is NOT one of the recognized modes, treat the entire argument string as a problem statement and auto-recommend a mode per the decision tree in `mode-index.md`.
+
+---
 
 This skill routes a reasoning task to the appropriate category skill containing the relevant method(s). Your job as the router is:
 

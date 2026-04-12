@@ -1,9 +1,18 @@
 ---
 name: think-core
 description: Core reasoning triad — Inductive, Deductive, and Abductive. Use when the user invokes `/think inductive`, `/think deductive`, or `/think abductive`, or asks to generalize from examples, derive conclusions from rules, or find the best explanation for observations. In v0.1.0 this skill contains Inductive and Deductive; Abductive ships in a future version.
+argument-hint: "[inductive|deductive] <problem>"
 ---
 
 # think-core — Core Reasoning Triad
+
+## User Invocation
+
+```
+$ARGUMENTS
+```
+
+Parse these arguments. The first word should be `inductive` or `deductive`. The rest is the problem to reason about. If invoked via the `think` router, `$ARGUMENTS` is the same string the user originally typed after `/think`.
 
 This category skill contains two of the three fundamental reasoning patterns: **Inductive** (specific → general) and **Deductive** (general → specific). **Abductive** (inference to the best explanation) will join this skill in a future version.
 

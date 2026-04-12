@@ -1,9 +1,18 @@
 ---
 name: think-standard
 description: Standard sequential and iterative reasoning methods. Use when the user invokes `/think sequential` or asks to break down a complex task into ordered steps, iterate on a plan, or revise earlier thinking. In v0.1.0 this skill contains only the Sequential method; Shannon and Hybrid ship in future versions.
+argument-hint: "[sequential] <problem>"
 ---
 
 # think-standard — Standard Sequential Reasoning Methods
+
+## User Invocation
+
+```
+$ARGUMENTS
+```
+
+Parse these arguments. The first word should be `sequential` (or omitted if invoked via the `think` router). The rest is the problem to reason about.
 
 This category skill contains the **Sequential** reasoning method. Shannon and Hybrid will join this skill in a future version.
 
