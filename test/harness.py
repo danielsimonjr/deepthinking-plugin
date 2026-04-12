@@ -17,13 +17,29 @@ TEST_DIR = Path(__file__).parent
 SCHEMA_DIR = TEST_DIR / "schemas"
 SAMPLE_DIR = TEST_DIR / "samples"
 
-# Map each sample file to its expected schema + expected outcome
-SAMPLES = [
-    ("sequential-valid.json", "sequential.json", True),
-    ("inductive-valid.json", "inductive.json", True),
-    ("deductive-valid.json", "deductive.json", True),
-    ("sequential-invalid.json", "sequential.json", False),
-]
+
+# Auto-discover SAMPLES: every `<mode>-valid.json` in samples/ validates against
+# the matching `<mode>.json` in schemas/. Every `<mode>-invalid.json` is expected
+# to fail validation against the same schema. This scales to all 34+ modes without
+# manual bookkeeping.
+def _discover_samples():
+    out = []
+    for sample_path in sorted(SAMPLE_DIR.glob("*.json")):
+        name = sample_path.name
+        if name.endswith("-valid.json"):
+            mode = name[: -len("-valid.json")]
+            schema = f"{mode}.json"
+            if (SCHEMA_DIR / schema).exists():
+                out.append((name, schema, True))
+        elif name.endswith("-invalid.json"):
+            mode = name[: -len("-invalid.json")]
+            schema = f"{mode}.json"
+            if (SCHEMA_DIR / schema).exists():
+                out.append((name, schema, False))
+    return out
+
+
+SAMPLES = _discover_samples()
 
 
 def load_schema(name):
