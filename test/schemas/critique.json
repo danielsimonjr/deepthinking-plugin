@@ -2,34 +2,89 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CritiqueThought",
   "type": "object",
-  "required": ["mode", "work", "strengths", "weaknesses", "socraticQuestions", "verdict", "strengthsIdentified", "weaknessesIdentified", "balanceRatio"],
+  "required": [
+    "mode",
+    "work",
+    "strengths",
+    "weaknesses",
+    "socraticQuestions",
+    "verdict",
+    "strengthsIdentified",
+    "weaknessesIdentified",
+    "balanceRatio"
+  ],
   "properties": {
-    "mode": { "const": "critique" },
+    "mode": {
+      "const": "critique"
+    },
     "work": {
       "type": "object",
-      "required": ["id", "title", "type", "claimedContribution", "audience"],
+      "required": [
+        "id",
+        "title",
+        "type",
+        "claimedContribution",
+        "audience"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "type": { "type": "string", "enum": ["paper", "proposal", "design", "plan", "code", "argument", "other"] },
-        "claimedContribution": { "type": "string" },
-        "audience": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "paper",
+            "proposal",
+            "design",
+            "plan",
+            "code",
+            "argument",
+            "other"
+          ]
+        },
+        "claimedContribution": {
+          "type": "string"
+        },
+        "audience": {
+          "type": "string"
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "strengths": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "description", "significance", "evidence"],
+        "required": [
+          "id",
+          "description",
+          "significance",
+          "evidence"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "description": { "type": "string" },
-          "significance": { "type": "string", "enum": ["high", "medium", "low"] },
-          "evidence": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "significance": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "weaknesses": {
@@ -37,15 +92,36 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "description", "severity", "evidence", "improvement"],
+        "required": [
+          "id",
+          "description",
+          "severity",
+          "evidence",
+          "improvement"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "description": { "type": "string" },
-          "severity": { "type": "string", "enum": ["critical", "significant", "minor"] },
-          "evidence": { "type": "string" },
-          "improvement": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "significant",
+              "minor"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "improvement": {
+            "type": "string"
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "socraticQuestions": {
@@ -53,29 +129,76 @@
       "minItems": 5,
       "items": {
         "type": "object",
-        "required": ["type", "question", "target"],
+        "required": [
+          "type",
+          "question",
+          "target"
+        ],
         "properties": {
-          "type": { "type": "string", "enum": ["clarification", "assumptions", "evidence", "alternative_viewpoints", "implications"] },
-          "question": { "type": "string" },
-          "target": { "type": "string" }
+          "type": {
+            "type": "string",
+            "enum": [
+              "clarification",
+              "assumptions",
+              "evidence",
+              "alternative_viewpoints",
+              "implications"
+            ]
+          },
+          "question": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "verdict": {
       "type": "object",
-      "required": ["overallAssessment", "strongestClaim", "criticalLimitation", "recommendation"],
+      "required": [
+        "overallAssessment",
+        "strongestClaim",
+        "criticalLimitation",
+        "recommendation"
+      ],
       "properties": {
-        "overallAssessment": { "type": "string" },
-        "strongestClaim": { "type": "string" },
-        "criticalLimitation": { "type": "string" },
-        "recommendation": { "type": "string", "enum": ["accept", "accept_with_revisions", "major_revisions", "reject", "not_applicable"] }
+        "overallAssessment": {
+          "type": "string"
+        },
+        "strongestClaim": {
+          "type": "string"
+        },
+        "criticalLimitation": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "accept_with_revisions",
+            "major_revisions",
+            "reject",
+            "not_applicable"
+          ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
-    "strengthsIdentified": { "type": "integer", "minimum": 0 },
-    "weaknessesIdentified": { "type": "integer", "minimum": 0 },
-    "balanceRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+    "strengthsIdentified": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weaknessesIdentified": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "balanceRatio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
   },
   "additionalProperties": false
 }

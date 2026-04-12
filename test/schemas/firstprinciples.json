@@ -2,70 +2,160 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "FirstPrinciplesThought",
   "type": "object",
-  "required": ["mode", "question", "principles", "derivationSteps", "conclusion"],
+  "required": [
+    "mode",
+    "question",
+    "principles",
+    "derivationSteps",
+    "conclusion"
+  ],
   "properties": {
-    "mode": { "const": "firstprinciples" },
-    "question": { "type": "string", "minLength": 1 },
+    "mode": {
+      "const": "firstprinciples"
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
     "principles": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "type", "statement", "justification"],
+        "required": [
+          "id",
+          "type",
+          "statement",
+          "justification"
+        ],
         "properties": {
-          "id": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
           "type": {
             "type": "string",
-            "enum": ["axiom", "observation", "definition", "assumption"]
+            "enum": [
+              "axiom",
+              "observation",
+              "definition",
+              "assumption"
+            ]
           },
-          "statement": { "type": "string", "minLength": 1 },
-          "justification": { "type": "string" },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "justification": {
+            "type": "string"
+          },
           "dependsOn": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "latex": { "type": "string" }
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "latex": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "derivationSteps": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["stepNumber", "principle", "inference", "confidence"],
+        "required": [
+          "stepNumber",
+          "principle",
+          "inference",
+          "confidence"
+        ],
         "properties": {
-          "stepNumber": { "type": "integer", "minimum": 1 },
-          "principle": { "type": "string" },
-          "inference": { "type": "string", "minLength": 1 },
-          "logicalForm": { "type": "string" },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "latex": { "type": "string" }
+          "stepNumber": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "principle": {
+            "type": "string"
+          },
+          "inference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "logicalForm": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "latex": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "conclusion": {
       "type": "object",
-      "required": ["statement", "derivationChain", "certainty"],
+      "required": [
+        "statement",
+        "derivationChain",
+        "certainty"
+      ],
       "properties": {
-        "statement": { "type": "string" },
+        "statement": {
+          "type": "string"
+        },
         "derivationChain": {
           "type": "array",
-          "items": { "type": "integer" }
+          "items": {
+            "type": "integer"
+          }
         },
-        "certainty": { "type": "number", "minimum": 0, "maximum": 1 },
+        "certainty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "limitations": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "latex": { "type": "string" }
+        "latex": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "alternativeInterpretations": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     }
   },
   "additionalProperties": false

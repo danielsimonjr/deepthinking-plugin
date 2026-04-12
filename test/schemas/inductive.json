@@ -2,16 +2,33 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "InductiveThought",
   "type": "object",
-  "required": ["mode", "observations", "generalization", "confidence"],
+  "required": [
+    "mode",
+    "observations",
+    "generalization",
+    "confidence"
+  ],
   "properties": {
-    "mode": { "const": "inductive" },
+    "mode": {
+      "const": "inductive"
+    },
     "observations": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-    "pattern": { "type": "string" },
-    "generalization": { "type": "string", "minLength": 1 },
+    "pattern": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generalization": {
+      "type": "string",
+      "minLength": 1
+    },
     "confidence": {
       "type": "number",
       "minimum": 0,
@@ -19,9 +36,17 @@
     },
     "counterexamples": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-    "sampleSize": { "type": "integer", "minimum": 1 }
+    "sampleSize": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    }
   },
   "additionalProperties": false
 }

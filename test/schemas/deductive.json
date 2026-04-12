@@ -2,18 +2,42 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DeductiveThought",
   "type": "object",
-  "required": ["mode", "premises", "conclusion", "validityCheck"],
+  "required": [
+    "mode",
+    "premises",
+    "conclusion",
+    "validityCheck"
+  ],
   "properties": {
-    "mode": { "const": "deductive" },
+    "mode": {
+      "const": "deductive"
+    },
     "premises": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-    "conclusion": { "type": "string", "minLength": 1 },
-    "logicForm": { "type": "string" },
-    "validityCheck": { "type": "boolean" },
-    "soundnessCheck": { "type": "boolean" }
+    "conclusion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "logicForm": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validityCheck": {
+      "type": "boolean"
+    },
+    "soundnessCheck": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
   },
   "additionalProperties": false
 }

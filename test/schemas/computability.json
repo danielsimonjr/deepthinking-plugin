@@ -2,9 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ComputabilityThought",
   "type": "object",
-  "required": ["mode", "thoughtType", "dependencies", "assumptions", "uncertainty"],
+  "required": [
+    "mode",
+    "thoughtType",
+    "dependencies",
+    "assumptions",
+    "uncertainty"
+  ],
   "properties": {
-    "mode": { "const": "computability" },
+    "mode": {
+      "const": "computability"
+    },
     "thoughtType": {
       "type": "string",
       "enum": [
@@ -21,261 +29,688 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "states", "inputAlphabet", "tapeAlphabet", "blankSymbol", "transitions", "initialState", "acceptStates", "rejectStates", "type"],
+        "required": [
+          "id",
+          "name",
+          "states",
+          "inputAlphabet",
+          "tapeAlphabet",
+          "blankSymbol",
+          "transitions",
+          "initialState",
+          "acceptStates",
+          "rejectStates",
+          "type"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "states": { "type": "array", "items": { "type": "string" } },
-          "inputAlphabet": { "type": "array", "items": { "type": "string" } },
-          "tapeAlphabet": { "type": "array", "items": { "type": "string" } },
-          "blankSymbol": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inputAlphabet": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tapeAlphabet": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blankSymbol": {
+            "type": "string"
+          },
           "transitions": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["fromState", "readSymbol", "toState", "writeSymbol", "direction"],
+              "required": [
+                "fromState",
+                "readSymbol",
+                "toState",
+                "writeSymbol",
+                "direction"
+              ],
               "properties": {
-                "fromState": { "type": "string" },
-                "readSymbol": { "type": "string" },
-                "toState": { "type": "string" },
-                "writeSymbol": { "type": "string" },
-                "direction": { "type": "string", "enum": ["L", "R", "S"] }
+                "fromState": {
+                  "type": "string"
+                },
+                "readSymbol": {
+                  "type": "string"
+                },
+                "toState": {
+                  "type": "string"
+                },
+                "writeSymbol": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "L",
+                    "R",
+                    "S"
+                  ]
+                }
               },
-              "additionalProperties": false
+              "additionalProperties": true
             }
           },
-          "initialState": { "type": "string" },
-          "acceptStates": { "type": "array", "items": { "type": "string" } },
-          "rejectStates": { "type": "array", "items": { "type": "string" } },
+          "initialState": {
+            "type": "string"
+          },
+          "acceptStates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rejectStates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "type": {
             "type": "string",
-            "enum": ["deterministic", "nondeterministic", "multi_tape", "oracle"]
+            "enum": [
+              "deterministic",
+              "nondeterministic",
+              "multi_tape",
+              "oracle"
+            ]
           },
-          "oracle": { "type": "string" }
+          "oracle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "currentMachine": {
       "type": "object",
-      "required": ["id", "name", "states", "inputAlphabet", "tapeAlphabet", "blankSymbol", "transitions", "initialState", "acceptStates", "rejectStates", "type"],
+      "required": [
+        "id",
+        "name",
+        "states",
+        "inputAlphabet",
+        "tapeAlphabet",
+        "blankSymbol",
+        "transitions",
+        "initialState",
+        "acceptStates",
+        "rejectStates",
+        "type"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "states": { "type": "array", "items": { "type": "string" } },
-        "inputAlphabet": { "type": "array", "items": { "type": "string" } },
-        "tapeAlphabet": { "type": "array", "items": { "type": "string" } },
-        "blankSymbol": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputAlphabet": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tapeAlphabet": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blankSymbol": {
+          "type": "string"
+        },
         "transitions": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["fromState", "readSymbol", "toState", "writeSymbol", "direction"],
+            "required": [
+              "fromState",
+              "readSymbol",
+              "toState",
+              "writeSymbol",
+              "direction"
+            ],
             "properties": {
-              "fromState": { "type": "string" },
-              "readSymbol": { "type": "string" },
-              "toState": { "type": "string" },
-              "writeSymbol": { "type": "string" },
-              "direction": { "type": "string", "enum": ["L", "R", "S"] }
+              "fromState": {
+                "type": "string"
+              },
+              "readSymbol": {
+                "type": "string"
+              },
+              "toState": {
+                "type": "string"
+              },
+              "writeSymbol": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "L",
+                  "R",
+                  "S"
+                ]
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
-        "initialState": { "type": "string" },
-        "acceptStates": { "type": "array", "items": { "type": "string" } },
-        "rejectStates": { "type": "array", "items": { "type": "string" } },
+        "initialState": {
+          "type": "string"
+        },
+        "acceptStates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rejectStates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "type": {
           "type": "string",
-          "enum": ["deterministic", "nondeterministic", "multi_tape", "oracle"]
+          "enum": [
+            "deterministic",
+            "nondeterministic",
+            "multi_tape",
+            "oracle"
+          ]
         },
-        "oracle": { "type": "string" }
+        "oracle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "computationTrace": {
       "type": "object",
-      "required": ["machine", "input", "steps", "result", "totalSteps", "spaceUsed", "isTerminating"],
+      "required": [
+        "machine",
+        "input",
+        "steps",
+        "result",
+        "totalSteps",
+        "spaceUsed",
+        "isTerminating"
+      ],
       "properties": {
-        "machine": { "type": "string" },
-        "input": { "type": "string" },
+        "machine": {
+          "type": "string"
+        },
+        "input": {
+          "type": "string"
+        },
         "steps": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["stepNumber", "state", "tapeContents", "headPosition"],
+            "required": [
+              "stepNumber",
+              "state",
+              "tapeContents",
+              "headPosition"
+            ],
             "properties": {
-              "stepNumber": { "type": "integer", "minimum": 0 },
-              "state": { "type": "string" },
-              "tapeContents": { "type": "string" },
-              "headPosition": { "type": "integer", "minimum": 0 }
+              "stepNumber": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "state": {
+                "type": "string"
+              },
+              "tapeContents": {
+                "type": "string"
+              },
+              "headPosition": {
+                "type": "integer",
+                "minimum": 0
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
-        "result": { "type": "string", "enum": ["accept", "reject", "loop", "running"] },
-        "totalSteps": { "type": "integer", "minimum": 0 },
-        "spaceUsed": { "type": "integer", "minimum": 0 },
-        "isTerminating": { "type": "boolean" },
-        "terminationReason": { "type": "string" }
+        "result": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject",
+            "loop",
+            "running"
+          ]
+        },
+        "totalSteps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spaceUsed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "isTerminating": {
+          "type": "boolean"
+        },
+        "terminationReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "problems": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "description", "inputFormat", "question", "yesInstances", "noInstances", "decidabilityStatus"],
+        "required": [
+          "id",
+          "name",
+          "description",
+          "inputFormat",
+          "question",
+          "yesInstances",
+          "noInstances",
+          "decidabilityStatus"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "inputFormat": { "type": "string" },
-          "question": { "type": "string" },
-          "yesInstances": { "type": "array", "items": { "type": "string" } },
-          "noInstances": { "type": "array", "items": { "type": "string" } },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "inputFormat": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "yesInstances": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "noInstances": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "decidabilityStatus": {
             "type": "string",
-            "enum": ["decidable", "semi_decidable", "undecidable", "unknown"]
+            "enum": [
+              "decidable",
+              "semi_decidable",
+              "undecidable",
+              "unknown"
+            ]
           },
-          "complexityClass": { "type": "string" },
-          "reducesTo": { "type": "array", "items": { "type": "string" } },
-          "reducesFrom": { "type": "array", "items": { "type": "string" } }
+          "complexityClass": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reducesTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reducesFrom": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "currentProblem": {
       "type": "object",
-      "required": ["id", "name", "description", "inputFormat", "question", "yesInstances", "noInstances", "decidabilityStatus"],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "inputFormat",
+        "question",
+        "yesInstances",
+        "noInstances",
+        "decidabilityStatus"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "inputFormat": { "type": "string" },
-        "question": { "type": "string" },
-        "yesInstances": { "type": "array", "items": { "type": "string" } },
-        "noInstances": { "type": "array", "items": { "type": "string" } },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "inputFormat": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "yesInstances": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "noInstances": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "decidabilityStatus": {
           "type": "string",
-          "enum": ["decidable", "semi_decidable", "undecidable", "unknown"]
+          "enum": [
+            "decidable",
+            "semi_decidable",
+            "undecidable",
+            "unknown"
+          ]
         },
-        "complexityClass": { "type": "string" },
-        "reducesTo": { "type": "array", "items": { "type": "string" } },
-        "reducesFrom": { "type": "array", "items": { "type": "string" } }
+        "complexityClass": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reducesTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reducesFrom": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "reductions": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "fromProblem", "toProblem", "type", "reductionFunction"],
+        "required": [
+          "id",
+          "fromProblem",
+          "toProblem",
+          "type",
+          "reductionFunction"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "fromProblem": { "type": "string" },
-          "toProblem": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
+          "fromProblem": {
+            "type": "string"
+          },
+          "toProblem": {
+            "type": "string"
+          },
           "type": {
             "type": "string",
-            "enum": ["many_one", "turing", "polynomial_time", "log_space"]
+            "enum": [
+              "many_one",
+              "turing",
+              "polynomial_time",
+              "log_space"
+            ]
           },
           "reductionFunction": {
             "type": "object",
-            "required": ["description", "inputTransformation", "outputInterpretation", "preserves"],
+            "required": [
+              "description",
+              "inputTransformation",
+              "outputInterpretation",
+              "preserves"
+            ],
             "properties": {
-              "description": { "type": "string" },
-              "inputTransformation": { "type": "string" },
-              "outputInterpretation": { "type": "string" },
-              "preserves": { "type": "string" }
+              "description": {
+                "type": "string"
+              },
+              "inputTransformation": {
+                "type": "string"
+              },
+              "outputInterpretation": {
+                "type": "string"
+              },
+              "preserves": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "reductionChain": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "decidabilityProof": {
       "type": "object",
-      "required": ["id", "problem", "conclusion", "method"],
+      "required": [
+        "id",
+        "problem",
+        "conclusion",
+        "method"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "problem": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "problem": {
+          "type": "string"
+        },
         "conclusion": {
           "type": "string",
-          "enum": ["decidable", "semi_decidable", "undecidable"]
+          "enum": [
+            "decidable",
+            "semi_decidable",
+            "undecidable"
+          ]
         },
         "method": {
           "type": "string",
-          "enum": ["direct_machine", "reduction", "diagonalization", "rice_theorem", "oracle"]
+          "enum": [
+            "direct_machine",
+            "reduction",
+            "diagonalization",
+            "rice_theorem",
+            "oracle"
+          ]
         },
-        "knownUndecidableProblem": { "type": "string" },
+        "knownUndecidableProblem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "riceApplication": {
           "type": "object",
-          "required": ["property", "isNontrivial", "isSemantic"],
+          "required": [
+            "property",
+            "isNontrivial",
+            "isSemantic"
+          ],
           "properties": {
-            "property": { "type": "string" },
-            "isNontrivial": { "type": "boolean" },
-            "isSemantic": { "type": "boolean" }
+            "property": {
+              "type": "string"
+            },
+            "isNontrivial": {
+              "type": "boolean"
+            },
+            "isSemantic": {
+              "type": "boolean"
+            }
           },
-          "additionalProperties": false
+          "additionalProperties": true
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "complexityAnalysis": {
       "type": "object",
-      "required": ["complexityClass", "justification"],
+      "required": [
+        "complexityClass",
+        "justification"
+      ],
       "properties": {
-        "complexityClass": { "type": "string" },
-        "justification": { "type": "string" },
-        "timeComplexity": { "type": "string" },
-        "spaceComplexity": { "type": "string" },
-        "isComplete": { "type": "boolean" },
-        "reductionFrom": { "type": "string" }
+        "complexityClass": {
+          "type": "string"
+        },
+        "justification": {
+          "type": "string"
+        },
+        "timeComplexity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "spaceComplexity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isComplete": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reductionFrom": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "diagonalization": {
       "type": "object",
-      "required": ["id", "enumeration"],
+      "required": [
+        "id",
+        "enumeration"
+      ],
       "properties": {
-        "id": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
         "enumeration": {
           "type": "object",
-          "required": ["description", "indexSet", "enumeratedObjects"],
+          "required": [
+            "description",
+            "indexSet",
+            "enumeratedObjects"
+          ],
           "properties": {
-            "description": { "type": "string" },
-            "indexSet": { "type": "string" },
-            "enumeratedObjects": { "type": "string" }
+            "description": {
+              "type": "string"
+            },
+            "indexSet": {
+              "type": "string"
+            },
+            "enumeratedObjects": {
+              "type": "string"
+            }
           },
-          "additionalProperties": false
+          "additionalProperties": true
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "classicProblems": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "dependencies": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "assumptions": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "uncertainty": {
       "type": "number",
       "minimum": 0,
       "maximum": 1
     },
-    "keyInsight": { "type": "string" }
+    "keyInsight": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
   },
   "additionalProperties": false
 }

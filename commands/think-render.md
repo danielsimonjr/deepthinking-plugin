@@ -1,6 +1,6 @@
 ---
-description: "Render the most recent structured thought output (from /think) as a diagram. Usage: /think-render [format] where format is mermaid, dot, ascii, svg, or png (defaults to mermaid)."
-argument-hint: "[mermaid|dot|ascii|svg|png]"
+description: "Render the most recent structured thought output (from /think) as a diagram or document. Usage: /think-render [format] where format is mermaid, dot, ascii, json, markdown, graphml, html, tikz, uml, modelica, dashboard, svg, or png (defaults to mermaid)."
+argument-hint: "[mermaid|dot|ascii|json|markdown|graphml|html|tikz|uml|modelica|dashboard|svg|png]"
 ---
 
 The user invoked `/think-render` with arguments: `$ARGUMENTS`

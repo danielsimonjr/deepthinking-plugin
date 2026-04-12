@@ -2,161 +2,322 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AnalogicalThought",
   "type": "object",
-  "required": ["mode", "sourceDomain", "targetDomain", "mappings", "analogyStrength"],
+  "required": [
+    "mode",
+    "sourceDomain",
+    "targetDomain",
+    "mappings",
+    "analogyStrength"
+  ],
   "properties": {
-    "mode": { "const": "analogical" },
+    "mode": {
+      "const": "analogical"
+    },
     "sourceDomain": {
       "type": "object",
-      "required": ["name", "description", "entities"],
+      "required": [
+        "name",
+        "description",
+        "entities"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
         "entities": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["id", "name", "type", "description"],
+            "required": [
+              "id",
+              "name",
+              "type",
+              "description"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
-              "type": { "type": "string" },
-              "description": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
         "relations": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "type", "from", "to", "description"],
+            "required": [
+              "id",
+              "type",
+              "from",
+              "to",
+              "description"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "type": { "type": "string" },
-              "from": { "type": "string" },
-              "to": { "type": "string" },
-              "description": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
         "properties": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["entityId", "name", "value"],
+            "required": [
+              "entityId",
+              "name",
+              "value"
+            ],
             "properties": {
-              "entityId": { "type": "string" },
-              "name": { "type": "string" },
-              "value": { "type": "string" }
+              "entityId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "targetDomain": {
       "type": "object",
-      "required": ["name", "description", "entities"],
+      "required": [
+        "name",
+        "description",
+        "entities"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
         "entities": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["id", "name", "type", "description"],
+            "required": [
+              "id",
+              "name",
+              "type",
+              "description"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
-              "type": { "type": "string" },
-              "description": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
         "relations": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "type", "from", "to", "description"],
+            "required": [
+              "id",
+              "type",
+              "from",
+              "to",
+              "description"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "type": { "type": "string" },
-              "from": { "type": "string" },
-              "to": { "type": "string" },
-              "description": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
         "properties": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["entityId", "name", "value"],
+            "required": [
+              "entityId",
+              "name",
+              "value"
+            ],
             "properties": {
-              "entityId": { "type": "string" },
-              "name": { "type": "string" },
-              "value": { "type": "string" }
+              "entityId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "mappings": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["sourceEntityId", "targetEntityId", "justification", "confidence"],
+        "required": [
+          "sourceEntityId",
+          "targetEntityId",
+          "justification",
+          "confidence"
+        ],
         "properties": {
-          "sourceEntityId": { "type": "string" },
-          "targetEntityId": { "type": "string" },
-          "justification": { "type": "string" },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          "sourceEntityId": {
+            "type": "string"
+          },
+          "targetEntityId": {
+            "type": "string"
+          },
+          "justification": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "insights": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["description", "sourceEvidence", "targetApplication", "novelty"],
+        "required": [
+          "description",
+          "sourceEvidence",
+          "targetApplication",
+          "novelty"
+        ],
         "properties": {
-          "description": { "type": "string" },
-          "sourceEvidence": { "type": "string" },
-          "targetApplication": { "type": "string" },
-          "novelty": { "type": "number", "minimum": 0, "maximum": 1 }
+          "description": {
+            "type": "string"
+          },
+          "sourceEvidence": {
+            "type": "string"
+          },
+          "targetApplication": {
+            "type": "string"
+          },
+          "novelty": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "inferences": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["sourcePattern", "targetPrediction", "confidence", "needsVerification"],
+        "required": [
+          "sourcePattern",
+          "targetPrediction",
+          "confidence",
+          "needsVerification"
+        ],
         "properties": {
-          "sourcePattern": { "type": "string" },
-          "targetPrediction": { "type": "string" },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "needsVerification": { "type": "boolean" }
+          "sourcePattern": {
+            "type": "string"
+          },
+          "targetPrediction": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "needsVerification": {
+            "type": "boolean"
+          }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "limitations": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "analogyStrength": {
       "type": "number",
