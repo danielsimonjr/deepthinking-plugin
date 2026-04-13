@@ -4,7 +4,7 @@ Structured reasoning methods for Claude Code. This plugin teaches Claude 34 reas
 
 ## Status
 
-**v0.4.0 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 11 output formats supported. See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.4.0 progression.
+**v0.4.1 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 11 output formats supported. See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.4.1 progression.
 
 ## Install
 
