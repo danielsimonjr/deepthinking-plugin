@@ -26,10 +26,12 @@ FORMATS_DIR = PLUGIN_ROOT / "reference" / "visual-grammar" / "formats"
 
 EXPECTED_FORMATS = {
     "ascii",
+    "csv",
     "dashboard",
     "graphml",
     "html",
     "json",
+    "latex-math",
     "markdown",
     "modelica",
     "tikz",
