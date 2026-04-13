@@ -1,6 +1,6 @@
 ---
-description: "Render the most recent structured thought output (from /think) as a diagram or document. Usage: /think-render [format] where format is mermaid, dot, ascii, json, markdown, graphml, html, tikz, uml, modelica, dashboard, svg, or png (defaults to mermaid)."
-argument-hint: "[mermaid|dot|ascii|json|markdown|graphml|html|tikz|uml|modelica|dashboard|svg|png]"
+description: "Render the most recent structured thought output (from /think) as a diagram or document. Usage: /think-render [format] where format is mermaid, dot, ascii, json, markdown, graphml, html, tikz, uml, modelica, dashboard, latex-math, csv, svg, or png (defaults to mermaid)."
+argument-hint: "[mermaid|dot|ascii|json|markdown|graphml|html|tikz|uml|modelica|dashboard|latex-math|csv|svg|png]"
 ---
 
 The user invoked `/think-render` with arguments: `$ARGUMENTS`
@@ -11,8 +11,8 @@ The user invoked `/think-render` with arguments: `$ARGUMENTS`
 
 2. **Parse the mode** from the JSON's `mode` field (or the first thought's `mode` if it's an array).
 
-3. **Determine the target format** from `$ARGUMENTS`. Default to `mermaid` if `$ARGUMENTS` is empty. Accepted values (all 13):
-   - **Direct Claude generation**: `mermaid`, `dot`, `ascii`, `json`, `markdown`, `graphml`, `html`, `tikz`, `uml`, `modelica`
+3. **Determine the target format** from `$ARGUMENTS`. Default to `mermaid` if `$ARGUMENTS` is empty. Accepted values (all 15):
+   - **Direct Claude generation**: `mermaid`, `dot`, `ascii`, `json`, `markdown`, `graphml`, `html`, `tikz`, `uml`, `modelica`, `latex-math`, `csv`
    - **Script-rendered from Mermaid/DOT**: `svg`, `png` (via `scripts/render-diagram.py`)
    - **Interactive HTML dashboard**: `dashboard` (via `scripts/render-html-dashboard.py`)
 
