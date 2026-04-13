@@ -546,11 +546,11 @@ New file `reference/visual-grammar/formats/csv.md`. Commit message: `feat(format
 **Wave:** 1
 **Model:** opus (complex refactor with concurrency, error handling, and preservation of behavior)
 **Files modified:** `test/smoke/run-all-modes.py`
-**Files read:** `test/smoke/run-all-modes.py` (current version, 218 lines)
+**Files read:** `test/smoke/run-all-modes.py` (current version, ~219 lines — verify with `wc -l` before editing in case of drift)
 
 **Current state:**
 
-`test/smoke/run-all-modes.py` runs 34 modes **sequentially**, each invoking `claude --bare -p "/deepthinking-plugin:think <mode> '<prompt>'"` in a subprocess with a configurable timeout (default 180s, override via `SMOKE_TIMEOUT`). Total wall-clock for all 34 modes: **30–60 minutes** (longer because 9 complex modes need 300–420s).
+`test/smoke/run-all-modes.py` (219 lines as of v0.4.1) runs 34 modes **sequentially**, each invoking `claude --bare -p "/deepthinking-plugin:think <mode> '<prompt>'"` in a subprocess with a configurable timeout (default 180s, override via `SMOKE_TIMEOUT`). Total wall-clock for all 34 modes: **30–60 minutes** (longer because 9 complex modes need 300–420s).
 
 The current loop structure (around line 148–210):
 
