@@ -34,20 +34,74 @@ When this plan says "format count 11 → 13" or "ships 2 new formats", it refers
 
 ## Priority ranking
 
-Items in the v0.5.0 roadmap, prioritized by (impact × confidence) ÷ effort. The priority tag determines whether a task is **ship-gate** for v0.5.0 (P0), **should-ship** (P1), **nice-to-have** (P2), or **deferred** (P3).
+This section is the **complete one-table view** of every roadmap candidate (reasoning modes + output formats + quality infrastructure), with an explicit priority tier for each including rejected items. v0.5.0 only ships items in tiers P0 and P1. P2 is included in this plan as Wave 3 but can slip to v0.5.1. P3 is held pending evidence. "Reject" items are out of scope for the foreseeable future and are listed here only so the plan is a comprehensive view — they are NOT scheduled for any release.
 
-| Priority | Item | Impact | Confidence | Effort | Rationale |
+**First: the 34 canonical reasoning modes that already shipped (v0.1.0 → v0.4.1).** These are the source of truth for what is implemented and should NOT be re-implemented:
+
+```
+abductive, algorithmic, analogical, analysis, argumentation, bayesian, causal,
+computability, constraint, counterfactual, critique, cryptanalytic, deductive,
+engineering, evidential, firstprinciples, formallogic, gametheory, historical,
+hybrid, inductive, mathematics, metareasoning, modal, optimization, physics,
+recursive, scientificmethod, sequential, shannon, stochastic, synthesis,
+systemsthinking, temporal
+```
+
+Any proposed new mode must NOT duplicate any of these. This is the test the roadmap's three review rounds applied to catch `toulmin`, `socratic`, `dialectical`, etc. below as already-canonical.
+
+### Comprehensive priority table — every roadmap candidate
+
+**Legend:** P0 = ship-gate for v0.5.0. P1 = should-ship for v0.5.0. P2 = nice-to-have in v0.5.0, may slip to v0.5.1. P3 = deferred (held pending evidence; may land in v0.6.0+). **Reject** = out of scope; will NOT be implemented (documented here for completeness).
+
+| Priority | Category | Item | Impact | Effort | Rationale |
 |---|---|---|---|---|---|
-| **P0** | `MODE_DISPLAY_NAMES` automated sync check | High | High | Trivial | Prevents silent drift at the 10th sync location; ~15 LOC extension to `test_artifact_consistency.py`. Zero regret. |
-| **P0** | `test_version_consistency.py` | High | High | Small | Prevents the v0.4.1 latent-bug class (plugin.json stuck at 0.1.0 for 4 releases). ~80 LOC new test file. |
-| **P0** | `examples/personal-command-alias/think-render.md` | Medium | High | Trivial | Ships the missing parallel to the existing `think.md` alias. 12-line file. |
-| **P1** | `latex-math` format grammar | Medium-High | High | Small-Medium | The only Tier 1 mode-agnostic format to survive three review rounds. Rendering convenience for 7 math-heavy modes. |
-| **P1** | `csv` format grammar | Medium | High | Small | Second Tier 1 format. Tabular export for 27 of 34 modes (HonestClaude-verified count). |
-| **P2** | Smoke test parallelization | High (long-term) | Medium | Medium | 30–60 min → 10–15 min with 4 parallel workers. Architect flagged as High severity for scaling. Complex refactor of `run-all-modes.py`. |
-| **P3** | `decisionanalysis` mode design spike | — | Low | Medium | Held in Tier 2 pending a worked example that proves distinctness. NOT an implementation item. |
-| **P3** | Tier 2 format candidates (`pdf`, `gexf`, `plantuml`) | Low | Low | Variable | Held pending specific consumer requests. |
+| **P0** | Quality | `MODE_DISPLAY_NAMES` automated sync check | High | Trivial | Prevents silent drift at the 10th sync location; ~15 LOC extension to `test_artifact_consistency.py`. Zero regret. |
+| **P0** | Quality | `test_version_consistency.py` | High | Small | Prevents the v0.4.1 latent-bug class (plugin.json stuck at 0.1.0 for 4 releases). ~80 LOC new test file. |
+| **P0** | Ergonomics | `examples/personal-command-alias/think-render.md` | Medium | Trivial | Ships the missing parallel to the existing `think.md` alias. 12-line file. |
+| **P1** | Format | `latex-math` format grammar | Medium-High | Small-Medium | The only Tier 1 mode-agnostic format to survive all three review rounds. Rendering convenience for 7 math-heavy modes. |
+| **P1** | Format | `csv` format grammar | Medium | Small-Medium | Second Tier 1 format. Tabular export for 27 of 34 modes (HonestClaude-verified). |
+| **P2** | Quality | Smoke test parallelization (T6) | High (long-term) | Medium-Large | 30–60 min → 10–15 min with 4 parallel workers. Architect flagged as High severity for scaling beyond 40 modes. |
+| **P3** | Mode | `decisionanalysis` — individual choice under uncertainty | Medium | Medium-Large | **Held, not rejected.** Architect said "fills a real gap" (individual choice vs strategic interaction); adversary said schema is a union of bayesian+gametheory+optimization. Requires a design spike producing a worked example that proves distinctness before any implementation. If the spike succeeds, this could land in v0.6.0. |
+| **P3** | Mode | `bayesiannetworks` — graphical probabilistic models | Low-Medium | Medium | **Contested rejection.** Adversary reviewer argued this is a structurally distinct approach (d-separation, conditional independence graphs) from the canonical `bayesian` single-hypothesis-with-evidence mode. Held in Tier 3 pending either a real smoke-test failure showing the `bayesian` schema cannot fit a multi-variable Bayesian network thought, or a specific user request. If re-evaluated and accepted, the architecturally correct path is likely extending the existing `bayesian` schema with optional `network` fields, not a new mode. |
+| **P3** | Format | `pdf` format grammar | Low | Medium | Tier 2 held. Requires HTML/LaTeX conversion pipeline. Only revisit if there's a concrete consumer request. |
+| **P3** | Format | `gexf` format grammar | Low | Small | Tier 2 held. More feature-rich than the canonical `graphml` for dynamic networks. Revisit only if Gephi/NetworkX users ask. |
+| **P3** | Format | `plantuml` format grammar | Low | Medium | Tier 2 held. Simpler UML syntax than canonical `uml`. Requires a Java-based renderer. Revisit only if enterprise-documentation users ask. |
+| **Reject** | Mode | `dialectical` (thesis/antithesis/synthesis) | — | — | Failed the "is this actually distinct?" test that caught `toulmin` and `socratic`. Already covered by combining canonical `synthesis` + `argumentation` + `critique`. 4 of 5 round-2 reviewers recommended rejection. The rejection is documented in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md` Tier 3. |
+| **Reject** | Mode | `structuralcausalmodel` (Pearl do-calculus) | — | — | Both Opus reviewers (architect AND adversary) recommended full rejection. Pearl's 3-rung causal hierarchy is already covered by canonical `causal` + `counterfactual`, and the canonical `causal` SKILL.md already teaches `do-operator` reasoning (grep-verified in HonestClaude round 3). If Pearl's lineage needs attribution, the right fix is a prose addition to `think-causal/SKILL.md`, not a new mode. |
+| **Reject** | Mode | `dynamicalsystems`, `controltheory`, `networkanalysis`, `probabilistic`, `reliabilityengineering` (computational cluster) | — | — | All 5 require **computation** (eigenvalues, PID tuning, centrality calculations, p-values, FMEA). The plugin teaches reasoning patterns expressed as structured JSON; it does not run computation. This is the dividing line between the plugin and the deprecated MCP (which had TypeScript handlers for exactly these). Out of scope per the "no Node runtime" principle in `CLAUDE.md`. `reliabilityengineering` is additionally redundant with canonical `engineering` (which explicitly includes failure analysis, same reason `fmea` was already rejected). |
+| **Reject** | Mode | `toulmin` (Argumentation Model) | — | — | IS the canonical `argumentation` mode. Verified against `skills/think-academic/SKILL.md` which explicitly defines argumentation as "Argumentation (Toulmin model with claim/warrant/backing/qualifier/rebuttal)" with a worked example using Toulmin structure verbatim. Any future mention of "Toulmin" in documentation is confirming the existing implementation, not requesting a new one. |
+| **Reject** | Mode | `socratic` (Socratic Questioning) | — | — | IS already part of canonical `critique`. The skill description explicitly says "Critique (peer-review style evaluation, strengths/weaknesses, **Socratic questions**)". Adding a separate mode would duplicate functionality. |
+| **Reject** | Mode | `dempstershafer` | — | — | IS the theoretical foundation of canonical `evidential`. The belief-functions / plausibility-functions framework lives inside the evidential mode, not as a separate reasoning paradigm. |
+| **Reject** | Mode | `allentemporal` (Allen Interval Relations) | — | — | Already covered by canonical `temporal` mode. Allen's interval algebra (before/after/during/overlaps/meets) is a specific formalism within temporal reasoning, not a distinct mode. |
+| **Reject** | Mode | `fmea` (Failure Mode and Effects Analysis) | — | — | Already covered by canonical `engineering` mode. FMEA is explicitly mentioned as a technique within engineering reasoning. |
+| **Reject** | Mode | `epistemiclogic` | — | — | Too narrow for standalone mode. Reasoning about knowledge states is a specialized modal logic system already covered by the generic `modal` mode's treatment of possibility and necessity. |
+| **Reject** | Mode | `deonticlogic` | — | — | Same as `epistemiclogic` — a specialized modal logic (obligations and permissions) with limited practical applications outside legal/ethical domains. Covered by `modal`. |
+| **Reject** | Mode | `modusponens` | — | — | Not a reasoning method; a specific inference rule within `formallogic`. Classical logical forms like modus ponens and modus tollens are components, not standalone paradigms. |
+| **Reject** | Mode | `syllogism` | — | — | Same as `modusponens` — a classical three-part argument form within `formallogic`, not a complete reasoning methodology. |
+| **Reject** | Format | `mermaid` | — | — | ALREADY canonical. Mermaid templates live at `reference/visual-grammar/<mode>.md` (one per mode) because each mode needs its own diagram structure. Rendered by `scripts/render-diagram.py` → `mmdc`. The README correctly counts it as one of the effective 11 formats. Future work should NOT collapse the per-mode structure into a single `formats/mermaid.md`. |
+| **Reject** | Format | `dot` (Graphviz) | — | — | Same as `mermaid` — already canonical, per-mode templates at `reference/visual-grammar/<mode>.md`, rendered via `dot`. |
+| **Reject** | Format | `svg`, `png` | — | — | Already supported as derived outputs from `mermaid` + `dot` via `scripts/render-diagram.py --render-as svg|png`. These are rendering targets, not source formats for reasoning visualization. |
+| **Reject** | Format | `confluence` markup | — | — | Platform-specific. Confluence already accepts markdown, and the canonical `markdown` format grammar covers this use case without a dedicated format. |
+| **Reject** | Format | `docx` | — | — | Binary format requiring a complex conversion pipeline. Pandoc conversion from `markdown` (canonical) already provides this capability. The marginal benefit of a native docx grammar does not justify the conversion-pipeline complexity. |
+| **Reject** | Format | `beamer` (LaTeX Beamer slides) | — | — | A specific LaTeX document class, not a distinct reasoning output format. Users needing presentation format can embed canonical `tikz` output in Beamer manually. |
 
-**v0.5.0 commits to P0 + P1 only.** P2 (smoke parallelization) is included in this plan as Wave 3 because it's independent of the release content, but it can slip to v0.5.1 without blocking v0.5.0.
+**Summary by tier:**
+
+| Tier | Modes | Formats | Quality/Ergonomics | Total |
+|---|---|---|---|---|
+| P0 (ship v0.5.0) | 0 | 0 | 3 | 3 |
+| P1 (should ship v0.5.0) | 0 | 2 | 0 | 2 |
+| P2 (nice-to-have v0.5.0) | 0 | 0 | 1 | 1 |
+| P3 (held, may land v0.6.0+) | 2 | 3 | 0 | 5 |
+| Reject (out of scope) | 14 | 7 | 0 | 21 |
+| **Candidates total** | **16** | **12** | **4** | **32** |
+| Already shipped (canonical) | 34 | 11 | n/a | — |
+
+**v0.5.0 commits to P0 + P1 only** (5 items = 3 P0 quality/ergonomics + 2 P1 formats). P2 (smoke parallelization) is included in this plan as Wave 3 because it's independent of the release content and has no risk of interfering with the format work, but it can slip to v0.5.1 without blocking v0.5.0.
+
+**Why the rejected modes are listed here:** so the plan is a self-contained reference for what is in and out of scope. A future contributor reading only this plan should be able to see the full picture without cross-referencing the ROADMAP. If any rejection is re-opened, update this table directly AND the corresponding Tier 3 entry in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md`.
+
+**If you want any rejected item reconsidered:** the weakest rejection is `bayesiannetworks` (contested by the Opus adversary reviewer in round 2 — see the ROADMAP's bayesiannetworks Tier 3 entry for the full argument). The second-weakest is `decisionanalysis`, which is actually held in P3, not rejected. All other rejections had concordant support from 3+ reviewers and should not be reopened without new evidence.
 
 ## Dependency graph
 
