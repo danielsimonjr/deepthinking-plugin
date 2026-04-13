@@ -4,7 +4,7 @@ Structured reasoning methods for Claude Code. This plugin teaches Claude 34 reas
 
 ## Status
 
-**v0.4.1 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 11 output formats supported. See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.4.1 progression.
+**v0.4.1 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 13 output formats supported. See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.4.1 progression.
 
 ## Install
 
@@ -76,7 +76,7 @@ The `/think-render` command invokes the `visual-exporter` agent, which reads the
 
 The render script **gracefully degrades** when binaries are missing — it prints the source to stdout with an install hint, so diagrams still work at the source level.
 
-### All 11 export formats (v0.4.0+)
+### All 13 export formats (v0.5.0+)
 
 | Format | Source | Consumers |
 |---|---|---|
@@ -91,6 +91,8 @@ The render script **gracefully degrades** when binaries are missing — it print
 | `uml` | format grammar | PlantUML, Mermaid (fallback UML) |
 | `modelica` | format grammar | OpenModelica, Wolfram System Modeler |
 | `dashboard` | template + renderer | Any modern browser (standalone HTML file) |
+| `latex-math` | format grammar | Overleaf, pdflatex, MathJax/KaTeX, academic papers |
+| `csv` | format grammar | Excel, R, pandas, databases, jq |
 
 The `visual-exporter` agent routes your format choice by reading both the per-mode grammar (`reference/visual-grammar/<mode>.md`) and the format grammar (`reference/visual-grammar/formats/<format>.md`) and substituting field values from your thought.
 
