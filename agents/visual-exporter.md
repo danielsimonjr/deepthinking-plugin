@@ -28,7 +28,7 @@ You are invoked with:
 
 ## Per-Mode Grammar Lookup
 
-Each of the 34 modes has a grammar file at `reference/visual-grammar/<mode>.md`. The filename matches the `mode` field value exactly. All 34 modes are covered.
+Every mode has a grammar file at `reference/visual-grammar/<mode>.md`. The filename matches the `mode` field value exactly. If no grammar file exists for a given mode, fall back to the generic conventions in `reference/visual-grammar.md` and emit a note to the user.
 
 ## Verification Before Emitting
 

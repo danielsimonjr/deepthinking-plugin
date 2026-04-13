@@ -1,6 +1,10 @@
 """
 Validate that every mode's visual grammar contains at least one parseable
-DOT code block. Syntactic check only -- does not invoke graphviz.
+DOT code block. Syntactic check only — does not invoke graphviz. For a stronger
+check, install graphviz and pipe each block to `dot -Tcanon > /dev/null`.
+
+Missing code blocks are treated as FAILURES, not skipped. If a mode genuinely
+has no DOT block for some reason, add it to ALLOWED_NO_DOT explicitly.
 """
 
 import re
@@ -9,11 +13,17 @@ from pathlib import Path
 
 GRAMMAR_DIR = Path(__file__).parent.parent.parent / "reference" / "visual-grammar"
 
+ALLOWED_NO_DOT = set()
+
 DOT_START = re.compile(r"(strict\s+)?(digraph|graph)\s+\w*\s*\{", re.MULTILINE)
 
 
+def _normalize(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def extract_dot_blocks(text: str):
-    return re.findall(r"```dot\n(.*?)\n```", text, re.DOTALL)
+    return re.findall(r"```dot\n(.*?)\n```", _normalize(text), re.DOTALL)
 
 
 def validate_dot(source: str):
@@ -27,13 +37,16 @@ def validate_dot(source: str):
 def main():
     passed = 0
     failed = 0
-    skipped = 0
     for grammar_file in sorted(GRAMMAR_DIR.glob("*.md")):
         content = grammar_file.read_text(encoding="utf-8")
         blocks = extract_dot_blocks(content)
         if not blocks:
-            print(f"SKIP: {grammar_file.name} has no dot block")
-            skipped += 1
+            if grammar_file.name in ALLOWED_NO_DOT:
+                print(f"PASS (allowlisted, no blocks): {grammar_file.name}")
+                passed += 1
+            else:
+                print(f"FAIL: {grammar_file.name} has no dot block (regression?)")
+                failed += 1
             continue
         all_ok = True
         for i, block in enumerate(blocks):
@@ -47,7 +60,7 @@ def main():
         else:
             failed += 1
     print()
-    print(f"Results: {passed} passed, {failed} failed, {skipped} skipped")
+    print(f"Results: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
 
 

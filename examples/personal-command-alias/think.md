@@ -1,5 +1,5 @@
 ---
-description: "Apply a structured reasoning method to a problem. Shortcut alias for /deepthinking-plugin:think. Usage: /think [mode] \"<problem>\" where mode is sequential, inductive, deductive, or omitted for auto-recommend."
+description: "Apply a structured reasoning method to a problem. Shortcut alias for /deepthinking-plugin:think. Usage: /think [mode] \"<problem>\" where mode is any of the 34 available reasoning modes (sequential, inductive, deductive, abductive, bayesian, causal, gametheory, systemsthinking, ...), or omitted for auto-recommend."
 argument-hint: "[mode] <problem>"
 ---
 

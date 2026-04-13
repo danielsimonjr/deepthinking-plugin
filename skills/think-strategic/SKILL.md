@@ -291,10 +291,9 @@ Input: "A cloud team has a weekly budget of $10,000. They need to provision CPU-
   ],
   "solution": {
     "status": "optimal",
-    "variableValues": { "a": 10, "b": 12 },
-    "objectiveValue": 260,
-    "bindingConstraints": ["c1"],
-    "note": "200*10 + 500*12 = 2000 + 6000 = 8000 — budget not fully exhausted. Re-check: a=0, b=20 gives 15*20=300 but costs 10000 exactly and satisfies a+b>=10. Optimal: a=0, b=20, value=300."
+    "variableValues": { "a": 0, "b": 20 },
+    "objectiveValue": 300,
+    "bindingConstraints": ["c1"]
   },
   "analysis": "Setting a=0 and b=20 maximizes performance at 300 units while exactly exhausting the $10,000 budget (c1 binding). The redundancy constraint (c2) is satisfied with 20 instances. Type A instances are never worth provisioning given the superior performance-per-dollar ratio of Type B (0.03 units/$ vs. 0.04 units/$). If the budget were reduced below $5,000, we would need to provision some Type A to satisfy the redundancy floor — the shadow price of c2 would become relevant there."
 }

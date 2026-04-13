@@ -26,8 +26,8 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    except (AttributeError, io.UnsupportedOperation, ValueError) as _reconfig_err:
+        print(f"WARNING: stdout reconfigure failed: {_reconfig_err}", file=sys.stderr)
 else:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
@@ -61,31 +61,43 @@ def repair_lone_backslashes(source):
 
 
 def extract_json_block(text):
-    """Return the first ```json ... ``` block parsed as Python, or None.
+    """Return (parsed, repaired) for the first ```json ... ``` block, or (None, False).
 
     Tries strict JSON parsing first; on failure, applies a minimal repair pass
-    for lone backslashes (common in math/LaTeX output) and retries."""
+    for lone backslashes (common in math/LaTeX output) and retries. The `repaired`
+    flag is surfaced in test output so JSON escape bugs in Claude's output are
+    not silently masked — they pass the test but with an attributed warning."""
     for match in JSON_BLOCK_RE.finditer(text):
         candidate = match.group(1).strip()
         try:
-            return json.loads(candidate)
+            return json.loads(candidate), False
         except json.JSONDecodeError:
             try:
-                return json.loads(repair_lone_backslashes(candidate))
+                return json.loads(repair_lone_backslashes(candidate)), True
             except json.JSONDecodeError:
                 continue
-    return None
+    return None, False
+
+
+def _escape_for_slash_command(value: str) -> str:
+    """Escape backslashes and double-quotes so the value survives embedding in
+    a `"..."` argument to /deepthinking-plugin:think. This is NOT shell escaping
+    — subprocess.run with shell=False handles that already — it is slash-command
+    argument escaping so a prompt containing a literal `"` doesn't terminate the
+    argument early."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def run_mode(mode, prompt):
-    """Invoke claude -p for one mode. Return (captured_text, exit_code, timed_out)."""
+    """Invoke claude -p for one mode. Return (stdout, stderr, exit_code, timed_out)."""
+    safe_prompt = _escape_for_slash_command(prompt)
     cmd = [
         "claude",
         "--plugin-dir",
         str(PLUGIN_ROOT),
         "--bare",
         "-p",
-        f'/deepthinking-plugin:think {mode} "{prompt}"',
+        f'/deepthinking-plugin:think {mode} "{safe_prompt}"',
     ]
     try:
         result = subprocess.run(
@@ -96,9 +108,12 @@ def run_mode(mode, prompt):
             timeout=TIMEOUT,
             errors="replace",
         )
-        return result.stdout, result.returncode, False
-    except subprocess.TimeoutExpired:
-        return "", -1, True
+        return result.stdout, result.stderr, result.returncode, False
+    except subprocess.TimeoutExpired as e:
+        # Partial output may still be useful for debugging.
+        partial_stdout = e.stdout if isinstance(e.stdout, str) else ""
+        partial_stderr = e.stderr if isinstance(e.stderr, str) else ""
+        return partial_stdout, partial_stderr, -1, True
 
 
 def validate_thought(thought, mode):
@@ -134,15 +149,19 @@ def main():
             return 1
 
     results = []
+    repaired_count = 0
     for entry in prompts:
         mode = entry["mode"]
         prompt = entry["prompt"]
         print(f"[{mode}] running (timeout {TIMEOUT}s)...", flush=True)
 
-        captured, exit_code, timed_out = run_mode(mode, prompt)
+        captured, stderr, exit_code, timed_out = run_mode(mode, prompt)
 
         raw_path = CAPTURED_DIR / f"{mode}-raw.txt"
-        raw_path.write_text(captured, encoding="utf-8")
+        raw_path.write_text(captured or "", encoding="utf-8")
+        if stderr:
+            stderr_path = CAPTURED_DIR / f"{mode}-stderr.txt"
+            stderr_path.write_text(stderr, encoding="utf-8")
 
         if timed_out:
             print(f"  FAIL: timeout after {TIMEOUT}s")
@@ -150,11 +169,11 @@ def main():
             continue
 
         if exit_code != 0 and not captured:
-            print(f"  FAIL: exit {exit_code} with no output")
+            print(f"  FAIL: exit {exit_code} with no output (stderr saved)")
             results.append((mode, False, f"exit {exit_code}"))
             continue
 
-        thought = extract_json_block(captured)
+        thought, repaired = extract_json_block(captured)
         if thought is None:
             print("  FAIL: no JSON code block found in output")
             results.append((mode, False, "no JSON block"))
@@ -165,8 +184,15 @@ def main():
 
         ok, reason = validate_thought(thought, mode)
         if ok:
-            print("  PASS")
-            results.append((mode, True, "ok"))
+            if repaired:
+                print(
+                    "  PASS (with backslash repair — JSON escape bug in model output)"
+                )
+                results.append((mode, True, "ok-repaired"))
+                repaired_count += 1
+            else:
+                print("  PASS")
+                results.append((mode, True, "ok"))
         else:
             print(f"  FAIL: schema violation: {reason}")
             results.append((mode, False, reason))
@@ -175,6 +201,12 @@ def main():
     passed = sum(1 for _, ok, _ in results if ok)
     failed = len(results) - passed
     print(f"===== Summary: {passed}/{len(results)} passed, {failed} failed =====")
+    if repaired_count:
+        print(
+            f"NOTE: {repaired_count} mode(s) required backslash repair — their SKILL.md "
+            "should be updated to produce strict-JSON-safe output (escape LaTeX "
+            "backslashes as \\\\)."
+        )
     for mode, ok, reason in results:
         marker = "PASS" if ok else "FAIL"
         print(f"  {marker:4s}  {mode:20s}  {reason}")

@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-04-12
+
+### Security
+- **Pinned Mermaid CDN to an exact version** (`@11.4.1`) with `crossorigin="anonymous"`. Previously `@11` was a floating major-version tag — a compromised jsdelivr tag would execute JS in every historical dashboard. Now the CDN URL is frozen.
+- **Switched Mermaid `securityLevel` from `loose` to `strict`**. Disables click-handlers and HTML embedding in labels — hardens against prompt-injected malicious diagram source.
+- **HTML-escape all user-supplied content** in `render-html-dashboard.py`, including the Mermaid source (was previously interpolated raw). The `{{MODE}}` token is now injected via `json.dumps` into a JS string literal instead of `html.escape` into HTML context, which is the correct escape function for JS contexts.
+- **Path validation** on `render-html-dashboard.py`'s `--output` and `--thought` flags — refuses paths that escape the current working directory or temp dir.
+- **Mode slug sanitization** — validates mode against `^[a-z][a-z0-9_-]{0,40}$` before substituting into the HTML template and download filename.
+- **Template token audit** — renderer now scans for unsubstituted `{{TOKEN}}` patterns after substitution and fails loudly if any remain.
+- **Mermaid `parseError` callback** + `window.onerror` handler in the dashboard template — replaces the fragile substring-match error surfacing; also handles the case where the CDN fails to load (offline, blocked, or unreachable).
+- **`copyJson()` fallback** for `file://` origins where `navigator.clipboard` is undefined — uses Selection API to let the user Ctrl+C the JSON.
+
+### Fixed
+- **Optimization worked example in `skills/think-strategic/SKILL.md`** was internally contradictory: structured fields showed `{a:10, b:12, value:260}` but the self-correcting `note` said the optimal was `{a:0, b:20, value:300}`. Rewritten to show the correct optimum directly.
+- **`scripts/render-diagram.py` exit codes**: previously returned 0 both when a diagram was rendered AND when the binary was missing. Now uses distinct codes (0 success, 2 with `--allow-skip` for degradation, 127 for missing-binary hard fail, 124 for timeout). Callers can now distinguish "file exists" from "file not written".
+- **`scripts/render-diagram.py` timeouts**: `dot` and `mmdc` subprocess calls had no timeout. Added a 60-second default. Both are wrapped in `try/except subprocess.TimeoutExpired`.
+- **`test/smoke/run-all-modes.py` silent exception**: narrowed `except Exception: pass` on stdout reconfigure to `(AttributeError, io.UnsupportedOperation, ValueError)` with an explicit warning to stderr.
+- **Repair attribution**: when `repair_lone_backslashes` recovers from a LaTeX-in-string JSON escape bug in Claude's output, the runner now prints `PASS (with backslash repair — JSON escape bug in model output)` and totals the repaired count in the summary. No more silent repairs.
+- **`test/smoke/run-all-modes.py` prompt escaping**: prompts with literal `"` characters are now escaped before interpolation into the `/think` argument string. Also captures stderr from the subprocess alongside stdout for debugging.
+- **`test/harness.py` error reporting**: uses `Draft7Validator.iter_errors` to report ALL validation failures per sample (capped at 5 for readability) with JSON path context, instead of just the first. Also catches `FileNotFoundError`, `JSONDecodeError`, `UnicodeDecodeError`, and `SchemaError` per-sample instead of crashing the whole run.
+- **`test_plugin_json.py` version assertion**: was hardcoded to `"0.1.0"` — now uses a semver regex so version bumps don't break the test.
+- **`test_skill_frontmatter.py` count assertion**: was hardcoded to `== 13` — now uses a sanity range (`1 <= n <= 100`) so adding a category skill doesn't falsely fail the test.
+- **CRLF tolerance** in `test/visual/validate-{mermaid,dot}.py`: normalize `\r\n` → `\n` before regex-extracting code blocks.
+
+### Changed
+- **`test/visual/validate-{mermaid,dot}.py`**: missing code blocks are now **FAIL**, not **SKIP**. An explicit `ALLOWED_NO_*` allowlist (empty by default) covers the rare legitimate case. This catches the exact regression the validators exist to catch — a grammar file silently losing its code fence.
+- **README.md Status section**: was stuck at "v0.1.0 Prototype, 3 modes" — now reflects v0.4.0 / 34 modes / smoke-tested.
+- **`skills/think/SKILL.md` Available Modes heading**: was "(v0.2.0)" — now "(v0.4.0)".
+- **`commands/think-render.md`**: was listing 7 formats in the workflow body; now lists all 13 consistently with the frontmatter and README.
+- **`examples/personal-command-alias/think.md`**: frontmatter description was stale (claimed 3 modes). Updated to "any of the 34 available modes".
+- **`agents/visual-exporter.md`**: removed hardcoded "All 34 modes are covered" — now says "Every mode has a grammar file… fall back to generic conventions if missing" so adding a mode doesn't silently drift the agent's prompt.
+
+### Added
+- **`test/test_artifact_consistency.py`** — enforces set-equality across `test/schemas/`, `test/samples/`, `reference/visual-grammar/`, `reference/output-formats/`, and `test/smoke/prompts.json`. Adding a new mode without all artifacts now fails immediately with a clear diff.
+- **`test/test_format_grammars.py`** — validates the 9 format grammar files have the expected structure (required sections, minimum byte size). Previously this directory had zero test coverage.
+- **`test/samples/{bayesian,inductive,deductive,abductive,causal}-invalid.json`** — 5 new negative sample fixtures exercising schema-validation failure modes (out-of-range probability, empty required array, wrong const mode, missing required field). Previously only 1 negative sample existed (`sequential-invalid.json`).
+- **`test/smoke/router-prompts.json`** + **`test/smoke/run-router-tests.py`** — 12 test prompts for the `/think "<problem>"` auto-recommend branch with a list of acceptable modes per prompt. Previously this code path had zero test coverage.
+- **`ARCHITECTURE.md`** — contributor-facing map of the three layers (reasoning skills, format grammars, runtime helpers), invocation flow diagrams, step-by-step "adding a new mode" and "adding a new format" recipes, and the five design principles.
+
+### Verified
+- **118 automated checks pass**: 1 plugin.json, 13 SKILL.md frontmatters, 34 mode-set consistency, 9 format grammars, 40 schema validations (34 valid + 6 invalid), 34 Mermaid grammars, 34 DOT grammars, 1 dashboard integration.
+- Dashboard renders without the `loose` security level; no template tokens leak through; Mermaid CDN is pinned.
+
 ## [0.4.0] - 2026-04-12
 
 ### Added
@@ -21,7 +64,7 @@ All notable changes to this project will be documented in this file.
 - **`test/schemas/hybrid.json`**: `primaryMode` enum expanded from 4 to all 34 modes; `thoughtType` relaxed from a restrictive 22-value enum to any non-empty string
 
 ### Verified
-- **Smoke tests**: all captured outputs (12+ modes executed in v0.4.0 release cycle: sequential, shannon, hybrid, inductive, deductive, abductive, mathematics, computability, temporal, historical, bayesian, …) pass schema validation end-to-end. Remaining 22 modes can be run by the user at any time via `python test/smoke/run-all-modes.py`.
+- **Smoke tests**: all 34 modes captured and validated end-to-end via `python test/smoke/run-all-modes.py` (headless `claude -p` → JSON extraction → schema validation). Re-runnable at any time.
 - **Harness tests**: all 35 hand-crafted schema tests still pass
 - **Frontmatter**: all 13 skills still have valid YAML
 - **Dashboard integration**: single-file HTML renders successfully with all placeholders substituted

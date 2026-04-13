@@ -1,4 +1,11 @@
-"""Validate each SKILL.md has the required YAML frontmatter."""
+"""Validate each SKILL.md has the required YAML frontmatter.
+
+Does NOT hardcode the expected skill count — new categories can be added without
+editing this test. The count must be >= 1 (so a totally empty skills/ dir fails)
+and <= 100 (sanity bound).
+
+Do NOT run with `python -O` — assertions would be stripped.
+"""
 
 import re
 from pathlib import Path
@@ -27,7 +34,7 @@ def check_skill(skill_md):
 
 def main():
     skills = sorted(SKILLS_DIR.rglob("SKILL.md"))
-    assert len(skills) == 13, f"Expected 13 SKILL.md files, found {len(skills)}"
+    assert 1 <= len(skills) <= 100, f"Unexpected SKILL.md count: {len(skills)}"
     for s in skills:
         check_skill(s)
         print(f"PASS: {s.relative_to(PLUGIN_ROOT)}")
