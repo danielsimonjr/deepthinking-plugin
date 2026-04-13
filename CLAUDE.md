@@ -31,7 +31,7 @@ The MCP's `README.md` and `CHANGELOG.md` now prominently direct users to this pl
 
 ## The 34-mode invariant (most important thing to know)
 
-The mode set is defined by the filenames in `test/schemas/*.json`. Every mode must appear in **9 places**, and they must stay in sync:
+The mode set is defined by the filenames in `test/schemas/*.json`. Every mode must appear in **10 places**, and they must stay in sync:
 
 1. `test/schemas/<mode>.json` — authoritative JSON Schema
 2. `test/samples/<mode>-valid.json` — realistic worked example
@@ -42,8 +42,9 @@ The mode set is defined by the filenames in `test/schemas/*.json`. Every mode mu
 7. `skills/think/mode-index.md` — auto-recommend decision tree
 8. `reference/taxonomy.md` — canonical taxonomy entry
 9. `test/smoke/prompts.json` — smoke-test prompt
+10. `scripts/render-html-dashboard.py` — the `MODE_DISPLAY_NAMES` dict (line ~28) maps each mode slug to a human-readable title for the dashboard. **No automated check enforces this** — adding a new mode without an entry here silently falls back to `mode.capitalize() + " Reasoning"`, which is wrong for compound names like `gametheory` → "Game Theory" or `firstprinciples` → "First Principles Reasoning".
 
-`python test/test_artifact_consistency.py` enforces set-equality across 1–5 and 9 and will tell you exactly what's missing or extra. **Run it after any mode-set change.** The step-by-step for adding a mode is in `ARCHITECTURE.md` ("Adding a new mode").
+`python test/test_artifact_consistency.py` enforces set-equality across **1–5 and 9** and will tell you exactly what's missing or extra. Items 6–8 still require manual verification; item 10 has no test at all (drift here only surfaces visually in the rendered dashboard). **Run the consistency test after any mode-set change**, and grep `MODE_DISPLAY_NAMES` to verify item 10. The step-by-step for adding a mode is in `ARCHITECTURE.md` ("Adding a new mode").
 
 ## Design principles (don't break these)
 
@@ -52,6 +53,27 @@ The mode set is defined by the filenames in `test/schemas/*.json`. Every mode mu
 - **Reasoning and visualization are decoupled.** Skills teach reasoning (the JSON shape). Grammars teach rendering (views over that shape). Changing one must not require touching the other. When adding an export format, you do NOT create per-mode files — the `visual-exporter` agent combines existing per-mode semantic grammars with the new surface-syntax grammar at runtime.
 - **Fail loudly.** Silent skips, swallowed exceptions, and default fallbacks are avoided. Where graceful degradation is necessary (e.g., `scripts/render-diagram.py` when `dot`/`mmdc` are missing), it's documented via explicit exit codes (127 missing, 2 with `--allow-skip`, 124 timeout).
 - **Auto-discovery where possible; explicit enforcement where needed.** `harness.py` auto-discovers samples from filename conventions; `test_artifact_consistency.py` explicitly enforces set-equality. Both matter — auto-discovery is a force multiplier but silently tolerates gaps, so the set-equality test is the check that catches drift.
+- **Some validation rules live in SKILL.md prose, not in JSON Schema.** JSON Schema can't express constraints like "exactly one element of this array has `isActual: true`" or "at least two distinct hypotheses with non-equal scores." These invariants live as written instructions in the relevant `skills/think-<category>/SKILL.md` files and are enforced only by the model following the skill prompt. Examples: `counterfactual` requires exactly one condition with `isIntervention: true`; `modal` requires exactly one world with `isActual: true`; `abductive` requires ≥2 distinct hypotheses (the schema only says `minItems: 1`); `historical` requires ≥2 episodes per pattern. **When editing a SKILL.md file, preserve any "must" / "exactly one" / "at least N" language** — those are load-bearing invariants the schema can't catch. Per-mode list is in `memory/project_skill_invariants.md`.
+
+## Out of scope (don't add these back)
+
+These are deliberate omissions from the brainstorming session that produced the plugin's design. If you find yourself proposing one of them, stop — the user already declined.
+
+- **No persistent session state across `/think` invocations.** Each invocation is self-contained. The user explicitly chose this in the brainstorming Q5 ("sessions out, visual exports in"). The MCP this plugin replaces had `SessionManager` + `FileSessionStore` + multi-instance file locking; none of it survived. If a user wants a chain, `/think sequential "..."` already returns an N-thought array in one response — no plugin state needed. Do not add a `~/.claude/deepthinking-plugin/thought-log.jsonl` or any equivalent.
+- **No Node.js runtime.** Everything is prose + Python stdlib + optional external binaries (`dot`, `mmdc`). The whole point of this plugin is that there is no MCP server.
+- **No hard dependency on `dot`/`mmdc`.** Detected at runtime via `shutil.which()`; their absence degrades gracefully via `--allow-skip`. Don't make them required.
+- **No test framework.** Tests are plain `python test/foo.py` invocations — no pytest, no unittest. Solo-maintainer simplicity wins over framework features here.
+
+## Skills vs slash commands (architectural distinction)
+
+Claude Code has **two completely separate systems** that can both live in a plugin:
+
+- **Skills** (`skills/<category>/SKILL.md`) are **automatically invoked** by Claude based on conversation context. They are NOT user-typed and have NO `/command` form. Their job is to inject knowledge into Claude's context when relevant.
+- **Slash commands** (`commands/<name>.md`) are **user-typed** as `/deepthinking-plugin:<name>`. They are thin invocation wrappers that use `$ARGUMENTS` and typically delegate to a skill for the actual knowledge.
+
+**This plugin uses both:** `commands/think.md` is the user-facing slash command; `skills/think/SKILL.md` (and 12 category skills) carry the reasoning knowledge that the command delegates to. The router skill is loaded automatically when the command body asks Claude to think with a specific mode.
+
+**If you want to add a new user-facing `/foo` command:** create `commands/foo.md`, NOT `skills/foo/SKILL.md`. Putting it in `skills/` will produce confusing "Unknown skill" errors when a user types `/foo` because skills don't have a slash-command surface. (This was discovered the hard way during v0.1.0 manual testing — see Gotcha #6 below for the matching invocation form caveat.)
 
 ## Common commands
 
@@ -158,6 +180,18 @@ git tag -a v0.X.Y -m "v0.X.Y: summary"
 git push origin master --tags
 gh release create v0.X.Y --title "v0.X.Y — summary" --notes "..."
 ```
+
+**Release sequence (don't reorder):**
+
+1. Run the full **fast suite** (8 tests, ~5 s). If anything fails, fix it before going further.
+2. Commit the changes.
+3. Run the full **smoke suite** (`test/smoke/run-all-modes.py`, 30–60 min). This is the only test that catches schema/skill drift against real model output.
+4. If smoke surfaces schema bugs, fix them and re-run **just the affected modes** (`SMOKE_MODE=<mode>`).
+5. Re-run the **fast suite** to confirm fixes didn't break the structural invariants.
+6. Bump `plugin.json` version + `CHANGELOG.md` entry. Do this LAST, in the same commit — if you bump earlier and have to revert, the version goes with the reversion.
+7. `git tag -a v0.X.Y` → `git push origin master --tags` → `gh release create v0.X.Y --latest`.
+
+**Watch out for hardcoded equality assertions in tests.** v0.4.1 fixed a latent bug where `plugin.json` was stuck at `0.1.0` for **four releases** because `test_plugin_json.py` had `assert version == "0.1.0"` and was passing vacuously. The fix is to use `re.match(r"^\d+\.\d+\.\d+$", version)`. If you add a new test that checks a count or version, prefer regex / range checks over literal equality — the literal becomes a silent correctness hole the moment the value changes.
 
 v0.4.1 is the current release; see the GitHub Releases page for the full history.
 
