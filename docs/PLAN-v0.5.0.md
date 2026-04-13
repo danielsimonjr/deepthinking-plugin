@@ -10,9 +10,27 @@ v0.5.0 is a **format + quality** release, not a modes release. After the roadmap
 - **3 quality-infrastructure improvements** (version consistency test, `MODE_DISPLAY_NAMES` automated sync check, smoke test parallelization)
 - **1 ergonomic fix** (`think-render` personal command alias)
 
-No source code changes to schemas, skills, or the router. The 34-mode invariant is untouched. The plugin ships with **120+ automated checks** instead of 118.
+No source code changes to schemas, skills, or the router. The 34-mode invariant is untouched. The plugin ships with **120 automated checks** instead of 118 (two new test files contribute one check each: `test_version_consistency.py` contributes 1, and the new `MODE_DISPLAY_NAMES` block inside `test_artifact_consistency.py` contributes 1).
 
-**Total unique task count: 16.** With the wave structure below, the full release can be executed in **3 sequential waves** of ~30–60 minutes each, most of that wall-clock spent waiting for smoke tests. The active engineering work is perhaps 4–6 hours if all tasks are dispatched in parallel.
+### Format-count glossary (resolves a terminology ambiguity)
+
+The plugin has three overlapping format counts that this plan uses in different contexts:
+
+- **Mode-agnostic format grammars** — files at `reference/visual-grammar/formats/*.md`. Currently **9** (ascii, dashboard, graphml, html, json, markdown, modelica, tikz, uml). v0.5.0 adds 2 → **11**.
+- **Per-mode format grammars** — the `mermaid` and `dot` templates embedded in each `reference/visual-grammar/<mode>.md` file. These are per-mode-specific, not mode-agnostic, so they live in a different directory. Count: **2**. Unchanged by v0.5.0.
+- **Effective total formats** — mode-agnostic + per-mode. Currently **11** (9 + 2); v0.5.0 takes this to **13** (11 + 2). This is the count the README's "All 11 export formats" table shows. v0.5.0 updates the table heading to "All 13 export formats".
+
+When this plan says "format count 11 → 13" or "ships 2 new formats", it refers to the effective total. When it says "EXPECTED_FORMATS goes from 9 to 11", it refers to the mode-agnostic subset tested by `test/test_format_grammars.py`.
+
+### Task count and effort
+
+**Total unique task count: 16.** With the wave structure below, the full release can be executed in **3 sequential waves**. Revised wall-clock estimates (after round-2 review corrections for T4, T5, T6 effort):
+
+- Wave 1: **60–90 minutes** (T6 smoke parallelization is the dominant task; T4 and T5 are Opus-model content authoring)
+- Wave 2: **5–10 minutes** (6 cascade tasks, mostly haiku-model mechanical edits)
+- Wave 3: **30–40 minutes** (sequential release gate, most of this is the T15 smoke run)
+
+**Total agent-driven wall-clock: ~95–140 minutes.** Compared to sequential single-engineer execution (~6–8 hours), the wave structure compresses the release to roughly 1.5–2.5 hours.
 
 ## Priority ranking
 
@@ -34,24 +52,24 @@ Items in the v0.5.0 roadmap, prioritized by (impact × confidence) ÷ effort. Th
 ## Dependency graph
 
 ```
-Wave 1 (6 tasks, fully parallel — no shared files):
+Wave 1 (5 tasks, fully parallel — no shared files, no dependencies on unwritten files):
   T1  MODE_DISPLAY_NAMES sync check   → test/test_artifact_consistency.py
   T2  test_version_consistency.py      → test/test_version_consistency.py (new)
-  T3  think-render alias               → examples/personal-command-alias/think-render.md (new)
   T4  latex-math format grammar        → reference/visual-grammar/formats/latex-math.md (new)
   T5  csv format grammar               → reference/visual-grammar/formats/csv.md (new)
   T6  smoke parallelization            → test/smoke/run-all-modes.py
 
-Wave 2 (5 tasks, parallel AFTER wave 1; each depends on T4+T5):
+Wave 2 (6 tasks, parallel AFTER wave 1; T3+T7-T11 all reference the new formats):
+  T3  think-render alias               → examples/personal-command-alias/think-render.md (new, references latex-math + csv)
   T7  test_format_grammars EXPECTED_FORMATS      → test/test_format_grammars.py
   T8  commands/think-render.md format list       → commands/think-render.md
   T9  agents/visual-exporter.md format list      → agents/visual-exporter.md
   T10 README "11 export formats" → "13"          → README.md
   T11 CLAUDE.md format count update              → CLAUDE.md
 
-Wave 3 (sequential release gate):
+Wave 3 (sequential release gate — T13 MUST run before T12):
+  T13 CHANGELOG [Unreleased] → [0.5.0]            → CHANGELOG.md  (must precede T12 so T2's version consistency test passes on T12)
   T12 Bump plugin.json 0.4.1 → 0.5.0              → .claude-plugin/plugin.json
-  T13 CHANGELOG [Unreleased] → [0.5.0]            → CHANGELOG.md
   T14 Run full fast test suite (verify Waves 1+2)
   T15 Run smoke suite (all 34 modes, ~15 min parallel)
   T16 Git tag v0.5.0 + gh release create
@@ -59,21 +77,42 @@ Wave 3 (sequential release gate):
 
 ### Why these dependencies
 
-- **Wave 1** tasks all touch **disjoint files** (verified by the file list above). Parallel execution is safe because no two tasks write to the same file. This is the `subagent-driven-development` parallel-wave pattern: non-overlapping writes across agents in a wave.
-- **Wave 2** tasks all depend on Wave 1 tasks T4 and T5 (the new format grammar files must exist before they can be added to `EXPECTED_FORMATS`, referenced in the think-render command, listed in the visual-exporter agent, added to the README table, and mentioned in CLAUDE.md). Within Wave 2, all 5 tasks touch disjoint files — they can also run in parallel.
-- **Wave 3** is sequential because each step validates the previous: version bump before CHANGELOG finalization, fast suite before smoke suite, smoke suite before tagging.
+- **Wave 1** (5 tasks) touches **disjoint files** and none of them reference formats that don't yet exist. Parallel execution is safe because no two tasks write to the same file. This is the `subagent-driven-development` parallel-wave pattern: non-overlapping writes across agents in a wave.
+- **Wave 2** (6 tasks) all depend on Wave 1 tasks T4 and T5: the new format grammar files must exist before they can be referenced anywhere else. T3 (the `think-render` alias) was moved here from Wave 1 because its frontmatter description lists all 15 accepted format values including the new `latex-math` and `csv` — writing that list before T4/T5 create the actual grammar files would create a time window where the alias references vapor. Within Wave 2, all 6 tasks touch disjoint files — they can run in parallel with each other.
+- **Wave 3** is sequential. **T13 runs before T12** (not the other way around): T13 promotes the `[Unreleased]` CHANGELOG section to `[0.5.0]` and adds the release date, and T12 bumps `plugin.json` to `0.5.0`. The order matters because T2's `test_version_consistency.py` (created in Wave 1) verifies that the version in `plugin.json` matches the latest CHANGELOG heading — if T12 runs first, the consistency test would fail because CHANGELOG still says `[Unreleased]`. T14 runs the fast test suite after both T13 and T12 are done. T15 runs smoke tests after T14 passes. T16 tags only after all previous steps are green.
 
 ## Wave composition for agent-driven execution
 
-### Wave 1 — Parallel, 6 independent tasks
+### Wave 1 — Parallel, 5 independent tasks
 
-Dispatch all 6 via `Agent` tool (subagent_type: general-purpose) or the skill-invocation dispatcher. Each agent gets ONE task with full context inlined. Expected wall-clock: **20–40 minutes** (bounded by T6 smoke parallelization, which is the largest task).
+Dispatch all 5 via `Agent` tool (subagent_type: general-purpose) or the skill-invocation dispatcher. Each agent gets ONE task with its full brief inlined. Expected wall-clock: **60–90 minutes** (bounded by T6 smoke parallelization, which is the largest task, plus T4 and T5 which are Opus-model content-authoring tasks).
 
-Reviewer assignment (post-task review): each Wave 1 task gets a **light review** via a single `llm_query` call (Sonnet) before merge — see "Review gates" below.
+**Synchronization mechanism (how the controller knows Wave 1 is done):** the controller blocks on all 5 `Agent` tool results in a single message. When every agent returns a result (success or failure), Wave 1 is complete. No polling, no timeouts needed beyond the Agent tool's own timeout.
 
-### Wave 2 — Parallel, 5 cascade tasks
+**Crash recovery protocol:** if any Wave 1 agent returns a failure or error status:
 
-Wait for Wave 1 to fully complete (all 6 tasks committed). Then dispatch Wave 2 as 5 parallel agents, each modifying one downstream file to mention the new `latex-math` and `csv` formats. Expected wall-clock: **10–15 minutes**.
+1. **Halt the wave.** Do NOT proceed to Wave 2 even if other agents succeeded.
+2. **Inspect the failed agent's output.** Read the error message; check whether the file it was supposed to create/modify exists and in what state.
+3. **Debug the root cause.** Is the task brief missing context? Did the subagent hit a rate limit? Was the acceptance criteria unfalsifiable?
+4. **Re-dispatch the single failed task** as a standalone Agent call with the original brief plus any disambiguation the first attempt surfaced. Do NOT re-dispatch the already-successful Wave 1 tasks.
+5. **Resume Wave 1 barrier.** Once the re-dispatch returns successfully, treat Wave 1 as complete and proceed to Wave 2.
+
+Reviewer assignment (post-task review): each Wave 1 task gets a **light review** via a single `llm_query` call (Sonnet) before merge — see "Review gates" below. Run all 5 reviewers in parallel after the wave barrier.
+
+### Wave 2 — Parallel, 6 cascade tasks
+
+Wait for Wave 1 to fully complete (all 5 tasks committed successfully). Then dispatch Wave 2 as 6 parallel agents, each modifying one downstream file to reference the new `latex-math` and `csv` formats. Wave 2 now includes T3 (the `think-render` personal command alias) which was moved from Wave 1 because its format list references the new grammars.
+
+**Pre-flight check before dispatching Wave 2** — the controller MUST verify:
+
+```bash
+test -f reference/visual-grammar/formats/latex-math.md && wc -c < reference/visual-grammar/formats/latex-math.md  # must be >= 400
+test -f reference/visual-grammar/formats/csv.md         && wc -c < reference/visual-grammar/formats/csv.md          # must be >= 400
+```
+
+If either file is missing or under 400 bytes, Wave 2 dispatch aborts and returns to Wave 1 crash recovery.
+
+Expected wall-clock: **5–10 minutes** (6 haiku-model cascade tasks, each a mechanical edit).
 
 ### Wave 3 — Sequential release gate
 
@@ -182,7 +221,7 @@ New file `test/test_version_consistency.py`. Commit message: `test(version): add
 
 ### T3 — Ship `examples/personal-command-alias/think-render.md`
 
-**Wave:** 1
+**Wave:** 2 (moved from Wave 1 because the alias description lists format values including `latex-math` and `csv`, which are created in Wave 1 by T4 and T5 — writing T3 before T4/T5 would reference vapor)
 **Model:** haiku (trivial file creation)
 **Files modified:** none
 **Files created:** `examples/personal-command-alias/think-render.md`
@@ -250,7 +289,7 @@ New file `examples/personal-command-alias/think-render.md`. Commit message: `fea
 ### T4 — Create `reference/visual-grammar/formats/latex-math.md`
 
 **Wave:** 1
-**Model:** sonnet (content-heavy grammar authoring)
+**Model:** opus (content-heavy grammar authoring + domain knowledge of AMS-math)
 **Files modified:** none
 **Files created:** `reference/visual-grammar/formats/latex-math.md`
 
@@ -314,10 +353,43 @@ Explain that each `\begin{align*}` block corresponds to a distinct math-bearing 
 
 **Section 4: `## Worked Example`** (~25 lines)
 
-Use a `bayesian` thought as the worked example (bayesian is the most math-obvious mode). Show:
+Use this concrete `bayesian` thought as the input (inlined here so the subagent does not need to read external files):
 
-1. A realistic bayesian JSON input (hypothesis, prior 0.3, evidence with likelihoods, posterior calculation)
-2. The latex-math output produced from it, with proper `\begin{align*}` blocks showing the full Bayes arithmetic
+```json
+{
+  "mode": "bayesian",
+  "thoughtType": "inference",
+  "hypothesis": {
+    "statement": "The failing deploy is caused by a config drift in service X",
+    "prior": 0.30
+  },
+  "alternatives": [
+    {"statement": "Network partition", "prior": 0.35},
+    {"statement": "Upstream dependency outage", "prior": 0.35}
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "description": "Config file diff shows 3 edited fields in service X",
+      "likelihood": {"givenH": 0.9, "givenNotH": 0.2}
+    },
+    {
+      "id": "E2",
+      "description": "Only service X is affected; upstream services healthy",
+      "likelihood": {"givenH": 0.8, "givenNotH": 0.4}
+    }
+  ],
+  "posterior": {
+    "value": 0.857,
+    "calculation": "P(H|E1,E2) = (0.9 * 0.8 * 0.3) / ((0.9 * 0.8 * 0.3) + (0.2 * 0.4 * 0.7)) = 0.216 / 0.272 = 0.794"
+  },
+  "confidence": 0.7
+}
+```
+
+Show the expected `latex-math` output produced from this input — a single `\begin{align*}` block rendering the full Bayes arithmetic with equation-by-equation `\\\\` line breaks, and an `\intertext{...}` line showing the human-readable hypothesis statement as caption. The worked example should be a **complete `.tex` document** that would compile with `pdflatex`. Use `\tag{bayesian.posterior.calculation}` at the end of the align block so the reader can trace back to the source field.
+
+Note on `givenH` vs `given_h`: the schema uses camelCase per plugin convention, not snake_case. Use `givenH` in both the JSON input and the corresponding LaTeX subscripts if referenced.
 
 **Per-mode considerations section (~10 lines)** — optional 5th section:
 
@@ -352,7 +424,7 @@ New file `reference/visual-grammar/formats/latex-math.md`. Commit message: `feat
 ### T5 — Create `reference/visual-grammar/formats/csv.md`
 
 **Wave:** 1
-**Model:** sonnet (content-heavy grammar authoring with per-mode flattening logic)
+**Model:** opus (content-heavy grammar authoring with 34-mode iteration; spec is Medium-Large effort, 60-90 minutes)
 **Files modified:** none
 **Files created:** `reference/visual-grammar/formats/csv.md`
 
@@ -426,13 +498,26 @@ E3,report Z,0.6,0.4
 
 **Section 5: `## Per-Mode Flattening Rules`** (~30 lines — unique to this format)
 
-Document the primary tabular field (if any) for each of the 34 modes. Mark each as Excellent / Moderate / Fallback:
+Document the primary tabular field (if any) for each of the 34 canonical modes. The 34 modes (from `test/schemas/*.json`, authoritative) are:
 
-- **Excellent** (tabular content IS the primary artifact): `bayesian.evidence`, `gametheory.payoffMatrix.entries`, `optimization.alternatives`, `engineering.tradeStudy.alternatives`, `evidential.belief`, `constraint.variables`, `abductive.hypotheses`, `historical.episodes`, `stochastic.samples`
-- **Moderate** (tabular subsection exists but prose is the main artifact): `causal.links`, `counterfactual.outcomes`, `formallogic.premises`, `analogical.mappings`, `argumentation.warrants`, `synthesis.sources`, `critique.strengths`, `temporal.events`, `computability.reductions`, `systemsthinking.feedbackLoops`, `inductive.observations`, `modal.possibleWorlds`, `scientificmethod.experiments`, `recursive.cases`, `analysis.layers`, `cryptanalytic.patterns`, `mathematics.steps`
-- **Fallback** (2-column `field,value` representation only): `sequential`, `shannon`, `hybrid`, `firstprinciples`, `metareasoning`, `physics`, `deductive`
+```
+abductive, algorithmic, analogical, analysis, argumentation, bayesian, causal,
+computability, constraint, counterfactual, critique, cryptanalytic, deductive,
+engineering, evidential, firstprinciples, formallogic, gametheory, historical,
+hybrid, inductive, mathematics, metareasoning, modal, optimization, physics,
+recursive, scientificmethod, sequential, shannon, stochastic, synthesis,
+systemsthinking, temporal
+```
 
-The tier assignments are heuristics — the subagent should verify each mode's schema before committing to "Excellent" vs "Moderate". If unsure, default to "Moderate".
+The subagent MUST list all 34 of these in the Per-Mode Flattening Rules section, with a tier for each. Do not invent additional modes; do not omit any. Use this initial tier assignment as a starting point (based on the Roadmap's analysis) and refine by reading the actual schema only if uncertain:
+
+- **Excellent** (tabular content IS the primary artifact; CSV export is a clean one-table view): `abductive` (hypotheses), `bayesian` (evidence), `constraint` (variables), `engineering` (tradeStudy.alternatives), `evidential` (belief masses), `gametheory` (payoffMatrix.entries), `historical` (episodes), `optimization` (alternatives), `stochastic` (samples)
+- **Moderate** (tabular subsection exists but prose is the main artifact; CSV captures a secondary view): `analogical` (mappings), `analysis` (layers), `argumentation` (warrants, grounds, backings, qualifiers, rebuttals — five tables per thought), `causal` (causalChain), `counterfactual` (outcomes), `critique` (strengths/weaknesses/socraticQuestions — three tables), `cryptanalytic` (patterns), `formallogic` (premises), `inductive` (observations), `mathematics` (proofSteps), `modal` (possibleWorlds), `recursive` (cases), `scientificmethod` (experiments, predictions), `synthesis` (sources, convergence, divergence), `systemsthinking` (feedbackLoops, archetypes), `temporal` (events, intervals), `computability` (decisionSteps)
+- **Fallback** (no primary tabular field — emit 2-column `field,value` representation of top-level fields): `algorithmic`, `deductive`, `firstprinciples`, `hybrid`, `metareasoning`, `physics`, `sequential`, `shannon`
+
+**Verification step for the subagent:** before committing the tier assignment for a specific mode, open `test/schemas/<mode>.json` and scan for array-valued fields at the top level. If there's a wide array of objects (≥3 properties per object), the mode is Excellent or Moderate. If only prose / scalar fields exist, it's Fallback. The initial tier assignment above is the best-effort baseline; correct any misplacements discovered during verification.
+
+**Coverage assertion:** after writing this section, count the mode slugs mentioned. The count MUST equal 34 exactly. If it doesn't, add any missing modes to the Fallback tier.
 
 **Section 6: `## Rendering Tools`** (~5 lines)
 
@@ -510,23 +595,34 @@ Refactor the main loop to use `concurrent.futures.ThreadPoolExecutor` with a con
 
 9. **Don't break `captured/` file writes.** Each mode writes three files (`<mode>-raw.txt`, `<mode>-parsed.json`, `<mode>-stderr.txt`). Make sure the function still writes them; verify after the refactor by running `SMOKE_MODE=bayesian python test/smoke/run-all-modes.py` and confirming the captured files exist.
 
-10. **Verify the wall-clock improvement.** Before committing, run the full suite once sequentially (baseline) and once with 4 workers (optimized). The optimized run should complete in 25–50% of the baseline time.
+10. **Wall-clock improvement is advisory, not a gate.** The expected improvement is 25-50% of baseline, but wall-clock depends on network/API latency and local CPU conditions. **Do NOT run the full sequential baseline as part of the task** — that would double the task's wall-clock. Instead: spot-check by running `SMOKE_MODE=bayesian python test/smoke/run-all-modes.py` (which exercises the single-mode path) and `SMOKE_WORKERS=1 SMOKE_MODE=bayesian python test/smoke/run-all-modes.py` (which exercises the sequential escape hatch). Neither of these runs the full 34-mode suite. The actual wall-clock improvement will be measured during T15 (the release-gate smoke run), which runs once anyway.
 
-**Acceptance criteria:**
+**Acceptance criteria (mechanical — all can be verified without running the full suite):**
 
-1. `python test/smoke/run-all-modes.py` runs with `SMOKE_WORKERS=4` default and completes faster than the sequential version.
-2. `SMOKE_MODE=bayesian python test/smoke/run-all-modes.py` still works (single-mode path).
-3. `SMOKE_TIMEOUT=420 SMOKE_MODE=physics python test/smoke/run-all-modes.py` still works (per-mode timeout override).
-4. `SMOKE_WORKERS=1 python test/smoke/run-all-modes.py` works (degrades to sequential) — this is the escape hatch for debugging.
-5. The final summary prints results in alphabetical mode order regardless of completion order.
-6. `test/smoke/captured/` contains all 34 × 3 files after a full run.
-7. Total LOC delta: ~+40 LOC (imports, worker env var, run_single_mode extraction, executor block, ordered summary).
+1. `SMOKE_MODE=bayesian python test/smoke/run-all-modes.py` (default workers) still works — exits 0 and produces `captured/bayesian-*.txt` files.
+2. `SMOKE_MODE=bayesian SMOKE_WORKERS=1 python test/smoke/run-all-modes.py` still works — the escape hatch degrades cleanly to sequential.
+3. `SMOKE_TIMEOUT=420 SMOKE_MODE=physics python test/smoke/run-all-modes.py` still works — per-mode timeout override is preserved.
+4. Reading the final summary output of the single-mode run shows `Running 1 mode with N parallel workers (SMOKE_WORKERS=N)...` (confirms the banner displays worker count).
+5. `test/smoke/captured/` contains `<mode>-raw.txt`, `<mode>-parsed.json`, and `<mode>-stderr.txt` for the mode that ran.
+6. Total LOC delta: ~+60-80 LOC (imports for `concurrent.futures`, `SMOKE_WORKERS` env var, `run_single_mode` extraction, executor block, ordered summary, inline comments on concurrency control flow).
+7. No test in the fast suite (`python test/test_*.py` files) regresses after the change — the smoke runner is not tested by those files, but they should not break in any indirect way.
+
+**Advisory (not a gate):** when T15 runs the full smoke suite during the release gate, record the wall-clock in the commit message so future releases can compare. If T15's wall-clock is NOT materially faster than v0.4.1's 30-60 min baseline, file a post-release issue for investigation but do NOT block the release.
+
+**Rollback:**
+
+If T6 introduces a bug that breaks smoke tests, revert with:
+```bash
+git revert <commit-hash-for-T6>
+git commit --amend -m "revert: smoke parallelization — preserving sequential path until fix"
+```
+After revert, `test/smoke/run-all-modes.py` returns to its pre-T6 sequential form and smoke tests should pass. Then re-run T15 with the sequential version. File a follow-up issue with the failure details captured from `test/smoke/captured/` at the time of the bug.
 
 **Deliverable:**
 
 Modified `test/smoke/run-all-modes.py` with parallel execution. Commit message: `perf(smoke): parallelize run-all-modes.py with ThreadPoolExecutor (4 workers default)`.
 
-**Note to the subagent:** this is the highest-risk task in Wave 1. Take extra care not to break the existing single-mode path or the JSON repair attribution. If in doubt, add more inline comments explaining the concurrent control flow.
+**Note to the subagent:** this is the highest-risk task in Wave 1. Take extra care not to break the existing single-mode path or the JSON repair attribution. If in doubt, add more inline comments explaining the concurrent control flow. **Wall-clock is T6's dominant cost in Wave 1**: effort is Medium-Large (~60-90 minutes of focused work for refactor + smoke mode verification, not full suite). If Wave 1 takes longer than expected, T6 is almost certainly the reason.
 
 ---
 
@@ -567,8 +663,8 @@ Keep alphabetical order. The comment `# NEW in v0.5.0` is optional but helpful f
 **Acceptance criteria:**
 
 1. `python test/test_format_grammars.py` exits 0.
-2. The summary line prints `All 11 format grammars have required structure` (was 9).
-3. Both new format files (`csv.md` and `latex-math.md`) from T4 and T5 must exist before this test passes.
+2. The summary line prints `All 11 mode-agnostic format grammars have required structure` (the count was 9 before v0.5.0; v0.5.0 adds 2 grammar files → 11 mode-agnostic grammars; the effective total including per-mode mermaid+dot is 13, but `test_format_grammars.py` only tests the mode-agnostic subset, so the summary reports 11, not 13).
+3. Both new format files (`csv.md` and `latex-math.md`) from T4 and T5 must exist before this test passes — this task belongs to Wave 2 specifically because of that ordering constraint.
 
 **Deliverable:**
 
@@ -722,9 +818,32 @@ Modified `CLAUDE.md`. Commit message: `docs(claude-md): update format count to 1
 
 ---
 
-### T12 — Bump `.claude-plugin/plugin.json` to 0.5.0
+### T13 — CHANGELOG `[Unreleased]` → `[0.5.0]` (runs BEFORE T12)
 
-**Wave:** 3 (release gate, sequential)
+**Wave:** 3 (release gate, sequential — this is the FIRST release-gate task, not the second)
+**Model:** sonnet (prose synthesis)
+**Files modified:** `CHANGELOG.md`
+
+**Why this runs before T12:** T2's `test_version_consistency.py` (created in Wave 1) verifies that `plugin.json.version` matches the first real (non-Unreleased) CHANGELOG heading. If T12 runs first, the consistency test would fail on T12's completion because CHANGELOG would still say `[Unreleased]` at the top. Running T13 first avoids this race.
+
+**Goal:**
+
+Promote the `[Unreleased]` section to a proper `[0.5.0] - 2026-04-XX` release entry. Add a summary paragraph at the top explaining what v0.5.0 ships (format expansion + quality infrastructure, no mode changes). Start a new empty `[Unreleased]` section above it.
+
+**Acceptance criteria:**
+
+1. `CHANGELOG.md` has both `## [Unreleased]` (empty or containing deferred items from the Gate 2 budget cap) AND `## [0.5.0] - 2026-04-XX` sections, in that order (Unreleased is above 0.5.0).
+2. The v0.5.0 section documents all T1-T11 changes with concrete file references.
+3. Release date is today's actual date (the date T13 executes on, not the date the plan was written).
+4. The summary paragraph is 2-4 sentences.
+
+**Deliverable:** Modified `CHANGELOG.md`. Commit message: `chore: finalize CHANGELOG for v0.5.0 release`.
+
+---
+
+### T12 — Bump `.claude-plugin/plugin.json` to 0.5.0 (runs AFTER T13)
+
+**Wave:** 3 (release gate, sequential — runs second, after T13 promotes the CHANGELOG heading)
 **Model:** haiku (one-line JSON edit)
 **Files modified:** `.claude-plugin/plugin.json`
 
@@ -735,29 +854,9 @@ Change `"version": "0.4.1"` to `"version": "0.5.0"`. Nothing else.
 **Acceptance criteria:**
 
 1. `python test/test_plugin_json.py` passes.
-2. `python test/test_version_consistency.py` (created in T2) passes — this implicitly verifies that the version bump is coherent with README, CHANGELOG, etc.
+2. `python test/test_version_consistency.py` (created in T2) passes — this verifies that the version bump is coherent with the CHANGELOG heading just promoted by T13, plus any README / SKILL.md version stamps.
 
 **Deliverable:** Modified `.claude-plugin/plugin.json`. Commit message: `chore: bump version to 0.5.0`.
-
----
-
-### T13 — CHANGELOG `[Unreleased]` → `[0.5.0]`
-
-**Wave:** 3
-**Model:** sonnet (prose synthesis)
-**Files modified:** `CHANGELOG.md`
-
-**Goal:**
-
-Promote the `[Unreleased]` section to a proper `[0.5.0] - 2026-04-XX` release entry. Add a summary paragraph at the top explaining what v0.5.0 ships (format expansion, quality infrastructure, no mode changes). Start a new empty `[Unreleased]` section above it.
-
-**Acceptance criteria:**
-
-1. `CHANGELOG.md` has both `## [Unreleased]` (empty) and `## [0.5.0] - 2026-04-XX` sections in that order.
-2. The v0.5.0 section documents all T1-T11 changes with concrete file references.
-3. Release date is today's actual date.
-
-**Deliverable:** Modified `CHANGELOG.md`. Commit message: `chore: finalize CHANGELOG for v0.5.0 release`.
 
 ---
 
@@ -864,21 +963,34 @@ gh release create v0.5.0 \
 
 ### How to dispatch Wave 1
 
-Use the `Agent` tool with `subagent_type: general-purpose` (or a dedicated specialist if one exists for the task type). Dispatch all 6 tasks in a **single message** with 6 parallel tool calls. The harness executes them concurrently.
+Use the `Agent` tool with `subagent_type: general-purpose` (or a dedicated specialist if one exists for the task type). Dispatch all **5** tasks (T1, T2, T4, T5, T6) in a **single message** with 5 parallel tool calls. The harness executes them concurrently.
 
-For each task, the subagent prompt must include the full task specification from this document (verbatim, copy-paste the relevant T1-T6 section) plus this preamble:
+Note the model selection per task: T1 → sonnet, T2 → sonnet, T4 → opus, T5 → opus, T6 → opus. The three Opus tasks are the ones carrying the Wave 1 wall-clock budget.
+
+For each task, the subagent prompt must include the full task specification from this document (verbatim, copy-paste the relevant T1/T2/T4/T5/T6 section) plus this preamble:
 
 ```
-You are working on the deepthinking-plugin repo at C:/Users/danie/Dropbox/Github/deepthinking-plugin/. Your task is ONE of the 16 tasks in docs/PLAN-v0.5.0.md. Do ONLY your assigned task. Do NOT touch any file not explicitly mentioned in your task description. When done, commit your change with the specified commit message and return a summary of what you did.
+You are working on the deepthinking-plugin repo at C:/Users/danie/Dropbox/Github/deepthinking-plugin/. Your task is ONE of the 16 tasks in docs/PLAN-v0.5.0.md. Do ONLY your assigned task. Do NOT touch any file not explicitly mentioned in your task description. When done, commit your change with the specified commit message and return a summary of what you did in under 200 words.
 
-Your task is: <paste T1-T6 section here>
+Your task is: <paste the relevant T1/T2/T4/T5/T6 section verbatim here>
 ```
 
-After Wave 1 dispatch, **wait for all 6 agents to return** before starting Wave 2. Do not start Wave 2 while Wave 1 is still in flight — T7-T11 depend on the files T4 and T5 create.
+After Wave 1 dispatch, **wait for all 5 agents to return** (success OR failure) before proceeding. The controller blocks synchronously on the Agent tool results — this is Python's `as_completed` pattern. Do not start Wave 2 while Wave 1 is still in flight.
+
+**If any Wave 1 agent returns failure**, apply the crash recovery protocol documented in "Wave 1 — Parallel, 5 independent tasks" above.
 
 ### How to dispatch Wave 2
 
-Same pattern — single message, 5 parallel Agent calls. Wave 2 agents must verify that the files T4 and T5 created exist before proceeding. If either file is missing, the Wave 2 agent should fail loudly and the controller will need to investigate.
+Pre-flight check first (controller runs these commands before dispatching):
+
+```bash
+test -f reference/visual-grammar/formats/latex-math.md && test $(wc -c < reference/visual-grammar/formats/latex-math.md) -ge 400 || echo "FAIL: latex-math missing or too small"
+test -f reference/visual-grammar/formats/csv.md         && test $(wc -c < reference/visual-grammar/formats/csv.md)         -ge 400 || echo "FAIL: csv missing or too small"
+```
+
+If either check prints FAIL, abort Wave 2 and return to Wave 1 crash recovery.
+
+Otherwise, dispatch all **6** tasks (T3, T7, T8, T9, T10, T11) in a **single message** with 6 parallel tool calls. All 6 are haiku-model mechanical edits. Each Wave 2 agent should also verify at the start of its task that `latex-math.md` and `csv.md` exist — defense in depth.
 
 ### Wave 3 — Controller-executed, sequential
 
@@ -888,14 +1000,15 @@ Wave 3 is NOT dispatched to subagents. The controller executes T12-T16 directly.
 
 | Wave | Parallelism | Dominant task | Est. wall-clock |
 |---|---|---|---|
-| Wave 1 | 6-way parallel | T6 (smoke parallelization refactor, Opus) | 30–45 min |
-| Wait for Wave 1 | — | — | 0 min (synchronous barrier) |
-| Wave 2 | 5-way parallel | T11 (CLAUDE.md count update, Haiku) | 5–10 min |
-| Wait for Wave 2 | — | — | 0 min (synchronous barrier) |
-| Wave 3 | Sequential | T15 (smoke suite, wall-bound) | 30–40 min (mostly the 10-15 min parallelized smoke run + 15-20 min of fix cycles if any tests fail) |
-| **Total** | — | — | **65–95 minutes** |
+| Wave 1 | 5-way parallel | T6 (smoke parallelization refactor, Opus), with T4 and T5 (Opus content authoring) running alongside | 60–90 min |
+| Wait for Wave 1 | — | Synchronous barrier (controller blocks on all 5 Agent results) | 0 min |
+| Pre-flight check | — | `wc -c` on new format files | ~1 min |
+| Wave 2 | 6-way parallel | T3 + 5 cascade tasks, all haiku-model mechanical edits | 5–10 min |
+| Wait for Wave 2 | — | Synchronous barrier | 0 min |
+| Wave 3 | Sequential | T15 (smoke suite, wall-bound) | 30–40 min (the parallelized smoke run is 10–15 min; 15–20 min buffer for fix cycles if any tests fail) |
+| **Total** | — | — | **95–140 minutes** |
 
-Compared to executing all 16 tasks sequentially by a single engineer (~6–8 hours), the agent-driven wave structure compresses to roughly 1–1.5 hours wall-clock.
+Compared to executing all 16 tasks sequentially by a single engineer (~6–8 hours), the agent-driven wave structure compresses to roughly **1.5–2.5 hours** wall-clock.
 
 ## Review gates
 
@@ -907,9 +1020,20 @@ Run a **light review** on each Wave 1 task's commit. For T1, T2, T6 (the higher-
 
 ### Gate 2 — After Wave 2 dispatch completes
 
-Run the **full 5-specialist review team** on the cumulative diff (everything from Waves 1+2). Use the standard team: Opus architect + Opus adversary + Sonnet technical + Sonnet domain + Sonnet editorial. Dispatch via `llm_query` with the current `CHANGELOG.md`, the full diff from `git diff master~10..master`, and the final state of each modified file.
+Run the **full 5-specialist review team** on the cumulative diff (everything from Waves 1+2). Use the standard team: Opus architect + Opus adversary + Sonnet technical + Sonnet domain + Sonnet editorial. Dispatch via `llm_query` with the current `CHANGELOG.md`, the full diff from `git diff master~11..master`, and the final state of each modified file.
 
-If the review team surfaces Critical or High severity findings, apply fixes BEFORE Wave 3.
+**Budget cap (prevents scope explosion):**
+
+The workflow rule says "fix all issues regardless of scale", but scale without a budget can cascade. Apply this triage rule:
+
+- **Critical findings** (broken execution, factually wrong, would make the release fail) → **fix immediately** before Wave 3.
+- **High findings** → fix immediately before Wave 3, but if the high-severity count exceeds **5**, stop and escalate to the user. 5 High findings usually means something is structurally wrong with the diff and needs a human decision about scope.
+- **Medium findings** → fix during Wave 3 if time permits, otherwise defer to a `v0.5.1` patch release. Document each deferred finding in the v0.5.1 section of CHANGELOG `[Unreleased]` so nothing is lost.
+- **Low findings** → defer to `v0.5.1` unless trivially fixable (single-line edits).
+
+**Escalation criterion:** if the review team produces **more than 10 High-or-Critical findings total**, or if any finding says "the release should not ship", pause Wave 3 and return control to the user with a summary of the findings. The user decides whether to fix-and-proceed, roll back, or re-scope.
+
+This budget cap respects both the "fix everything" rule AND the reality that a 98-finding review (like the one PR #1 received) cannot be addressed in the same release cycle without pushing out the schedule indefinitely.
 
 ### Gate 3 — After Wave 3 (release gate)
 
