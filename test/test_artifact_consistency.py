@@ -15,6 +15,7 @@ difference so you know exactly what to add.
 Do NOT run with `python -O` — assertions would be stripped.
 """
 
+import ast
 import json
 import sys
 from pathlib import Path
@@ -26,6 +27,7 @@ SAMPLES_DIR = PLUGIN_ROOT / "test" / "samples"
 GRAMMAR_DIR = PLUGIN_ROOT / "reference" / "visual-grammar"
 OUTPUT_FORMATS_DIR = PLUGIN_ROOT / "reference" / "output-formats"
 PROMPTS_FILE = PLUGIN_ROOT / "test" / "smoke" / "prompts.json"
+DASHBOARD_SCRIPT = PLUGIN_ROOT / "scripts" / "render-html-dashboard.py"
 
 
 def schemas_set():
@@ -58,6 +60,32 @@ def prompts_set():
     return {entry["mode"] for entry in entries}
 
 
+def _ast_str_value(node):
+    """Extract string value from an ast.Constant (or legacy ast.Str) node."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if hasattr(ast, "Str") and isinstance(node, ast.Str):  # Python < 3.8 compat
+        return node.s
+    raise TypeError(f"Expected string AST node, got {type(node).__name__}")
+
+
+def mode_display_names_set():
+    """Parse MODE_DISPLAY_NAMES from render-html-dashboard.py via ast (no import)."""
+    with open(DASHBOARD_SCRIPT, "r", encoding="utf-8") as f:
+        source = f.read()
+    tree = ast.parse(source, filename=str(DASHBOARD_SCRIPT))
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id == "MODE_DISPLAY_NAMES"
+            and isinstance(node.value, ast.Dict)
+        ):
+            return {_ast_str_value(k) for k in node.value.keys}
+    raise RuntimeError(f"MODE_DISPLAY_NAMES not found in {DASHBOARD_SCRIPT}")
+
+
 def format_diff(expected, actual, label):
     missing = expected - actual
     extra = actual - expected
@@ -79,6 +107,10 @@ def main():
         ("reference/visual-grammar/", grammar_set()),
         ("reference/output-formats/", output_formats_set()),
         ("test/smoke/prompts.json", prompts_set()),
+        (
+            "scripts/render-html-dashboard.py MODE_DISPLAY_NAMES",
+            mode_display_names_set(),
+        ),
     ]
 
     failed = 0
