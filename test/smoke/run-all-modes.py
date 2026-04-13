@@ -16,13 +16,16 @@ Environment:
                     Set SMOKE_WORKERS=1 for the sequential escape hatch.
 """
 
+import atexit
 import concurrent.futures
 import io
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 # Force UTF-8 stdout on Windows so arrow characters and diagrams don't crash prints.
@@ -66,6 +69,80 @@ except ValueError:
     )
     SMOKE_WORKERS = 4
 
+# ---------------------------------------------------------------------------
+# Subprocess registry + cleanup handlers
+#
+# Each worker thread registers its `claude -p` subprocess in _active_procs
+# before blocking on communicate() and unregisters it in a finally block.
+# The atexit + signal handlers below walk this set to force-kill any
+# grandchildren still running when the main process exits for any reason
+# (normal completion, Ctrl+C, SIGTERM). This prevents the orphan-grandchild
+# pathology where a killed smoke runner would leave behind zombie
+# `claude -p` processes whose only parent was the dead Python interpreter.
+# ---------------------------------------------------------------------------
+
+_active_procs: set = set()
+_active_procs_lock = threading.Lock()
+
+
+def _register_proc(proc: subprocess.Popen) -> None:
+    with _active_procs_lock:
+        _active_procs.add(proc)
+
+
+def _unregister_proc(proc: subprocess.Popen) -> None:
+    with _active_procs_lock:
+        _active_procs.discard(proc)
+
+
+def _kill_all_active_procs() -> None:
+    """Best-effort terminate of every still-running subprocess in the registry.
+
+    Called on normal exit (atexit), SIGINT (Ctrl+C), and SIGTERM. Idempotent —
+    safe to call multiple times. Uses .kill() not .terminate() because the
+    child subprocesses hold a live HTTP connection to the Anthropic API and
+    SIGTERM is ignored until the next I/O syscall; SIGKILL is immediate."""
+    with _active_procs_lock:
+        procs = list(_active_procs)
+        _active_procs.clear()
+    for proc in procs:
+        try:
+            if proc.poll() is None:
+                proc.kill()
+        except Exception:
+            # Best-effort: a proc we can't kill is already gone.
+            pass
+
+
+# Install cleanup hooks exactly once, at module import. atexit fires on any
+# normal Python exit path; signal handlers catch Ctrl+C and kill-signal
+# exits before the interpreter tears down.
+atexit.register(_kill_all_active_procs)
+
+
+def _signal_handler(signum, frame):
+    _kill_all_active_procs()
+    # 128 + signum is the standard shell-reported exit code for signal-
+    # terminated processes (130 for SIGINT, 143 for SIGTERM).
+    sys.exit(128 + signum)
+
+
+signal.signal(signal.SIGINT, _signal_handler)
+try:
+    signal.signal(signal.SIGTERM, _signal_handler)
+except (AttributeError, ValueError):
+    # Python on Windows does not support installing SIGTERM handlers in all
+    # configurations (only the Ctrl-C equivalent via SIGINT). atexit still
+    # runs on normal exit paths, which covers the common case.
+    pass
+# Windows also has SIGBREAK (Ctrl+Break), which is NOT the same as SIGINT
+# (Ctrl+C). Install the same handler for it on Windows so Ctrl+Break also
+# triggers the subprocess cleanup. SIGBREAK is absent on POSIX.
+try:
+    signal.signal(signal.SIGBREAK, _signal_handler)  # type: ignore[attr-defined]
+except (AttributeError, ValueError):
+    pass
+
 JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n```", re.DOTALL)
 
 # Matches a lone backslash that is NOT part of a valid JSON escape sequence.
@@ -74,9 +151,9 @@ INVALID_BACKSLASH_RE = re.compile(r'\\(?![\\"/bfnrtu])')
 
 
 def repair_lone_backslashes(source):
-    """Claude sometimes emits LaTeX-style escapes like `\ ` or `\mu` inside JSON
-    strings, which are invalid JSON. Double any backslash that isn't part of a
-    recognized escape sequence."""
+    r"""Claude sometimes emits LaTeX-style escapes like `\ ` or `\mu` inside
+    JSON strings, which are invalid JSON. Double any backslash that isn't part
+    of a recognized escape sequence."""
     return INVALID_BACKSLASH_RE.sub(r"\\\\", source)
 
 
@@ -109,7 +186,23 @@ def _escape_for_slash_command(value: str) -> str:
 
 
 def run_mode(mode, prompt, timeout):
-    """Invoke claude -p for one mode. Return (stdout, stderr, exit_code, timed_out)."""
+    """Invoke claude -p for one mode. Return (stdout, stderr, exit_code, timed_out).
+
+    Uses subprocess.Popen + communicate() (not subprocess.run) so the
+    running subprocess is registered in _active_procs before it blocks.
+    This registration is what allows the atexit and signal handlers above
+    to force-kill any in-flight children when the interpreter exits,
+    preventing the orphan-grandchild pathology in v0.5.0 where interrupting
+    the smoke runner left zombie `claude -p` processes behind.
+
+    Popen creation and registration happen atomically under
+    `_active_procs_lock` to close the race window where a signal could
+    arrive after Popen returned but before the child was registered; that
+    narrow gap would otherwise leak a child from the cleanup handler's
+    view. Holding the lock during Popen costs ~50-100ms of serialization
+    across workers (process fork is fast) but that is negligible compared
+    to the minutes each worker spends in communicate() waiting for the
+    API response."""
     safe_prompt = _escape_for_slash_command(prompt)
     cmd = [
         "claude",
@@ -119,21 +212,48 @@ def run_mode(mode, prompt, timeout):
         "-p",
         f'/deepthinking-plugin:think {mode} "{safe_prompt}"',
     ]
-    try:
-        result = subprocess.run(
+    # Atomic Popen+register under the lock — eliminates the race where a
+    # signal arriving between Popen and _register_proc could leak the child.
+    with _active_procs_lock:
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
-            timeout=timeout,
             errors="replace",
         )
-        return result.stdout, result.stderr, result.returncode, False
-    except subprocess.TimeoutExpired as e:
-        # Partial output may still be useful for debugging.
-        partial_stdout = e.stdout if isinstance(e.stdout, str) else ""
-        partial_stderr = e.stderr if isinstance(e.stderr, str) else ""
-        return partial_stdout, partial_stderr, -1, True
+        _active_procs.add(proc)
+    try:
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+            return stdout, stderr, proc.returncode, False
+        except subprocess.TimeoutExpired:
+            # Timeout reached — force-kill the subprocess and drain whatever
+            # its pipes produced before the kill. A second communicate() with
+            # a short grace period is the idiomatic way to recover partial
+            # output after a kill. If even that times out, explicitly reap
+            # the zombie via wait() and close the pipe fds so we don't leak
+            # file descriptors or leave the child in a defunct state.
+            proc.kill()
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                stdout, stderr = "", ""
+                try:
+                    if proc.stdout is not None:
+                        proc.stdout.close()
+                    if proc.stderr is not None:
+                        proc.stderr.close()
+                except Exception:
+                    pass
+                try:
+                    proc.wait(timeout=5)  # reap the zombie
+                except subprocess.TimeoutExpired:
+                    pass  # give up — atexit handler will take a final swing
+            return stdout, stderr, -1, True
+    finally:
+        _unregister_proc(proc)
 
 
 def validate_thought(thought, mode, schema_dir):
@@ -241,17 +361,20 @@ def main():
 
     # Concurrent control flow notes:
     # - We use threads (not processes) because each worker's real work is a
-    #   subprocess.run() call — it blocks on I/O, not Python CPU — so the GIL
-    #   is irrelevant. ThreadPoolExecutor is the lightest option.
+    #   subprocess.Popen + communicate() call — it blocks on I/O, not Python
+    #   CPU — so the GIL is irrelevant. ThreadPoolExecutor is the lightest
+    #   option.
     # - `as_completed` yields futures in completion order, letting us print a
     #   live progress line for each mode the moment it finishes.
-    # - KeyboardInterrupt (Ctrl+C): ThreadPoolExecutor does NOT cancel futures
-    #   that are already running — it can only refuse to start queued ones.
-    #   In-flight `claude -p` subprocesses will continue until they hit their
-    #   per-mode timeout or finish naturally. This is acceptable for a smoke
-    #   test runner (worst case: wait SMOKE_TIMEOUT seconds for cleanup); a
-    #   hard-kill mode would need subprocess.Popen + explicit .terminate()
-    #   wiring which isn't worth the complexity here.
+    # - KeyboardInterrupt (Ctrl+C) and SIGTERM: every in-flight `claude -p`
+    #   subprocess is registered in _active_procs at the top of run_mode()
+    #   and unregistered in its finally block. The signal handlers installed
+    #   at module load walk that set and .kill() each running child before
+    #   the interpreter exits. atexit runs the same cleanup on normal exit
+    #   paths. This eliminates the orphan-grandchild bug from v0.5.0 where
+    #   interrupting a parallel smoke run would leave behind zombie
+    #   `claude -p` processes. Signal exit uses code 128 + signum (130 for
+    #   SIGINT, 143 for SIGTERM) per the POSIX convention.
     # - Single-mode mode (SMOKE_MODE=bayesian) and SMOKE_WORKERS=1 both bypass
     #   the executor entirely. The sequential path is a pure for-loop that
     #   calls run_single_mode directly — same function, just no concurrency.

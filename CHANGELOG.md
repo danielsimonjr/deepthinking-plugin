@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-04-13
+
+Patch release fixing a subprocess cleanup bug in the parallel smoke runner introduced by v0.5.0's T6 refactor. No functional changes; single-file targeted fix.
+
+### Fixed
+
+- **`test/smoke/run-all-modes.py`** — prevents orphaned `claude -p` grandchildren when the smoke runner is interrupted. The v0.5.0 refactor from sequential `subprocess.run` to parallel `ThreadPoolExecutor` with `subprocess.run(timeout=N)` inside each worker introduced a cleanup gap: `ThreadPoolExecutor.__exit__` waits for all futures to complete before the Python interpreter exits, so a killed bash wrapper would leave the main Python process stuck on worker threads that were blocked on their own `subprocess.run` calls, which in turn held live `claude -p` grandchildren. The fix replaces each `subprocess.run` with `subprocess.Popen + communicate()`, registers each child in a module-level `_active_procs` set (thread-safe via a `threading.Lock`), and installs `atexit` + `SIGINT` / `SIGTERM` handlers that walk the set and force-kill any still-running children before the interpreter exits. Signal exit uses code 128 + signum (130 for SIGINT, 143 for SIGTERM) per the POSIX convention. Verified: single-mode smoke run exits cleanly with zero orphan `python.exe` processes created, timeout path still works, `SMOKE_WORKERS=1` sequential escape hatch preserved, deterministic alphabetical summary ordering unchanged.
+
+### Internal
+
+- Fixed a pre-existing `SyntaxWarning` on line 147 of `test/smoke/run-all-modes.py` — the `repair_lone_backslashes` docstring contained `"\ "` (backslash-space) as a literal example, which Python 3.12+ flags as an invalid escape sequence. Added an `r` prefix to make it a raw string literal.
+
 ## [0.5.0] - 2026-04-13
 
 Format expansion + quality infrastructure release. Grows the effective output format count from 11 to 13 (2 new mode-agnostic grammars), adds cross-file version consistency and MODE_DISPLAY_NAMES sync tests, parallelizes the smoke test runner, and fixes two pre-existing version-drift bugs caught by the new consistency test. No new reasoning modes — the 34 canonical modes are unchanged.
