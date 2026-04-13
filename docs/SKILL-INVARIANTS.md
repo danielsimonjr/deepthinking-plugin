@@ -2,7 +2,7 @@
 
 This document catalogs the validation rules that live in `skills/think-<category>/SKILL.md` prose because JSON Schema lacks the expressive power to encode them. They are enforced **only by the model following the skill prompt** — there is no test harness that catches violations.
 
-When editing a SKILL.md file, preserve any "must" / "exactly one" / "at least N" language — those are load-bearing invariants the schema cannot catch. Discovered during a v0.4.x RLM deep-dive over all 13 SKILL.md files; consolidated and verified during the v0.5.0 planning round.
+When editing a SKILL.md file, preserve any "must" / "exactly one" / "at least N" language — those are load-bearing invariants the schema cannot catch.
 
 ## Why JSON Schema can't express these
 
@@ -60,17 +60,13 @@ These are correctness rules that depend on values across multiple fields, which 
 - Check this list — the failure may be a violation of an unenforceable invariant that the schema accepted
 - Example: a `counterfactual` thought with two interventions will pass schema validation but is semantically broken; only the SKILL.md "exactly one `isIntervention`" rule catches it
 
-## How this list was built
+## Distinction from schema bugs
 
-The v0.4.x RLM deep-dive (Recursive Language Model methodology, arXiv:2512.24601) ran a parallel Haiku pass over all 13 SKILL.md files, extracting non-obvious invariants. Sonnet then synthesized 242 raw findings into ~13 candidates. Manual schema verification against `test/schemas/*.json` confirmed which were schema-unenforceable (4 of 7 cardinality rules) versus already-covered (3 of 7). Two additional cross-field semantic rules were identified during the same pass.
-
-## Distinction from the v0.4.1 schema bugs
-
-The v0.4.1 schema bugs (relaxed nested `additionalProperties: false`, allowed `null` for optional scalars, expanded enums) were cases where the schema was **wrong** and rejected legitimate Claude output. The invariants in this document are cases where the schema is **correct but under-constrained** — it accepts output that is structurally valid but semantically broken.
+Schema bugs (relaxed nested `additionalProperties: false`, `null` on optional scalars, expanded enums) are cases where the schema is **wrong** and rejects legitimate Claude output. The invariants in this document are different: they are cases where the schema is **correct but under-constrained** — it accepts output that is structurally valid but semantically broken.
 
 Different problem, different fix:
 
-- **Schema bugs** → relax the schema (done in v0.4.1)
+- **Schema bugs** → relax the schema
 - **Schema-unenforceable invariants** → tighten the SKILL.md prose, accept that automated tests cannot catch all of them, document the rules here so future contributors preserve them
 
 ## See also

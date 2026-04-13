@@ -1,6 +1,6 @@
 # Implementation Plan — v0.5.0 Format Expansion + Quality Infrastructure
 
-> Generated 2026-04-13. Agent-driven execution plan derived from the prioritized items in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md` (after three review rounds). Designed so each task is a self-contained subagent brief that can be dispatched via the `superpowers:subagent-driven-development` pattern with no conversation context.
+> Agent-driven execution plan derived from the prioritized items in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md`. Each task is a self-contained subagent brief that can be dispatched via the `superpowers:subagent-driven-development` pattern with no conversation context.
 
 ## Executive summary
 
@@ -24,7 +24,7 @@ When this plan says "format count 11 → 13" or "ships 2 new formats", it refers
 
 ### Task count and effort
 
-**Total unique task count: 16.** With the wave structure below, the full release can be executed in **3 sequential waves**. Revised wall-clock estimates (after round-2 review corrections for T4, T5, T6 effort):
+**Total unique task count: 16.** With the wave structure below, the full release can be executed in **3 sequential waves**:
 
 - Wave 1: **60–90 minutes** (T6 smoke parallelization is the dominant task; T4 and T5 are Opus-model content authoring)
 - Wave 2: **5–10 minutes** (6 cascade tasks, mostly haiku-model mechanical edits)
@@ -59,15 +59,15 @@ Any proposed new mode must NOT duplicate any of these. This is the test the road
 | **P0** | Quality | `test_version_consistency.py` | High | Small | Prevents the v0.4.1 latent-bug class (plugin.json stuck at 0.1.0 for 4 releases). ~80 LOC new test file. |
 | **P0** | Ergonomics | `examples/personal-command-alias/think-render.md` | Medium | Trivial | Ships the missing parallel to the existing `think.md` alias. 12-line file. |
 | **P1** | Format | `latex-math` format grammar | Medium-High | Small-Medium | The only Tier 1 mode-agnostic format to survive all three review rounds. Rendering convenience for 7 math-heavy modes. |
-| **P1** | Format | `csv` format grammar | Medium | Small-Medium | Second Tier 1 format. Tabular export for 27 of 34 modes (HonestClaude-verified). |
+| **P1** | Format | `csv` format grammar | Medium | Small-Medium | Second Tier 1 format. Tabular export for 27 of 34 modes. |
 | **P2** | Quality | Smoke test parallelization (T6) | High (long-term) | Medium-Large | 30–60 min → 10–15 min with 4 parallel workers. Architect flagged as High severity for scaling beyond 40 modes. |
 | **P3** | Mode | `decisionanalysis` — individual choice under uncertainty | Medium | Medium-Large | **Held, not rejected.** Architect said "fills a real gap" (individual choice vs strategic interaction); adversary said schema is a union of bayesian+gametheory+optimization. Requires a design spike producing a worked example that proves distinctness before any implementation. If the spike succeeds, this could land in v0.6.0. |
 | **P3** | Mode | `bayesiannetworks` — graphical probabilistic models | Low-Medium | Medium | **Contested rejection.** Adversary reviewer argued this is a structurally distinct approach (d-separation, conditional independence graphs) from the canonical `bayesian` single-hypothesis-with-evidence mode. Held in Tier 3 pending either a real smoke-test failure showing the `bayesian` schema cannot fit a multi-variable Bayesian network thought, or a specific user request. If re-evaluated and accepted, the architecturally correct path is likely extending the existing `bayesian` schema with optional `network` fields, not a new mode. |
 | **P3** | Format | `pdf` format grammar | Low | Medium | Tier 2 held. Requires HTML/LaTeX conversion pipeline. Only revisit if there's a concrete consumer request. |
 | **P3** | Format | `gexf` format grammar | Low | Small | Tier 2 held. More feature-rich than the canonical `graphml` for dynamic networks. Revisit only if Gephi/NetworkX users ask. |
 | **P3** | Format | `plantuml` format grammar | Low | Medium | Tier 2 held. Simpler UML syntax than canonical `uml`. Requires a Java-based renderer. Revisit only if enterprise-documentation users ask. |
-| **Reject** | Mode | `dialectical` (thesis/antithesis/synthesis) | — | — | Failed the "is this actually distinct?" test that caught `toulmin` and `socratic`. Already covered by combining canonical `synthesis` + `argumentation` + `critique`. 4 of 5 round-2 reviewers recommended rejection. The rejection is documented in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md` Tier 3. |
-| **Reject** | Mode | `structuralcausalmodel` (Pearl do-calculus) | — | — | Both Opus reviewers (architect AND adversary) recommended full rejection. Pearl's 3-rung causal hierarchy is already covered by canonical `causal` + `counterfactual`, and the canonical `causal` SKILL.md already teaches `do-operator` reasoning (grep-verified in HonestClaude round 3). If Pearl's lineage needs attribution, the right fix is a prose addition to `think-causal/SKILL.md`, not a new mode. |
+| **Reject** | Mode | `dialectical` (thesis/antithesis/synthesis) | — | — | Already covered by combining canonical `synthesis` + `argumentation` + `critique`. Rejection documented in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md` Tier 3. |
+| **Reject** | Mode | `structuralcausalmodel` (Pearl do-calculus) | — | — | Pearl's 3-rung causal hierarchy is already covered by canonical `causal` + `counterfactual`, and `skills/think-causal/SKILL.md` already teaches `do-operator` reasoning. If Pearl's lineage needs attribution, the right fix is a prose addition to `think-causal/SKILL.md`, not a new mode. |
 | **Reject** | Mode | `dynamicalsystems`, `controltheory`, `networkanalysis`, `probabilistic`, `reliabilityengineering` (computational cluster) | — | — | All 5 require **computation** (eigenvalues, PID tuning, centrality calculations, p-values, FMEA). The plugin teaches reasoning patterns expressed as structured JSON; it does not run computation. This is the dividing line between the plugin and the deprecated MCP (which had TypeScript handlers for exactly these). Out of scope per the "no Node runtime" principle in `CLAUDE.md`. `reliabilityengineering` is additionally redundant with canonical `engineering` (which explicitly includes failure analysis, same reason `fmea` was already rejected). |
 | **Reject** | Mode | `toulmin` (Argumentation Model) | — | — | IS the canonical `argumentation` mode. Verified against `skills/think-academic/SKILL.md` which explicitly defines argumentation as "Argumentation (Toulmin model with claim/warrant/backing/qualifier/rebuttal)" with a worked example using Toulmin structure verbatim. Any future mention of "Toulmin" in documentation is confirming the existing implementation, not requesting a new one. |
 | **Reject** | Mode | `socratic` (Socratic Questioning) | — | — | IS already part of canonical `critique`. The skill description explicitly says "Critique (peer-review style evaluation, strengths/weaknesses, **Socratic questions**)". Adding a separate mode would duplicate functionality. |
@@ -101,7 +101,7 @@ Any proposed new mode must NOT duplicate any of these. This is the test the road
 
 **Why the rejected modes are listed here:** so the plan is a self-contained reference for what is in and out of scope. A future contributor reading only this plan should be able to see the full picture without cross-referencing the ROADMAP. If any rejection is re-opened, update this table directly AND the corresponding Tier 3 entry in `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md`.
 
-**If you want any rejected item reconsidered:** the weakest rejection is `bayesiannetworks` (contested by the Opus adversary reviewer in round 2 — see the ROADMAP's bayesiannetworks Tier 3 entry for the full argument). The second-weakest is `decisionanalysis`, which is actually held in P3, not rejected. All other rejections had concordant support from 3+ reviewers and should not be reopened without new evidence.
+**If you want any rejected item reconsidered:** the weakest rejection is `bayesiannetworks` — see the ROADMAP's bayesiannetworks Tier 3 entry for the "structural reasoning approach distinct from belief updating" argument and why a schema extension to the canonical `bayesian` mode is a more defensible path than a new mode. The second-weakest is `decisionanalysis`, which is held in P3 (not rejected) pending a design spike. All other rejections should not be reopened without new evidence.
 
 ## Dependency graph
 
@@ -484,7 +484,7 @@ New file `reference/visual-grammar/formats/latex-math.md`. Commit message: `feat
 
 **Current state:**
 
-No CSV format grammar exists. The roadmap (`docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md`, Format Tier 1 section) established via HonestClaude empirical check that **27 of 34 modes have at least one wide array-of-objects field** (≥3 properties) that would flatten cleanly to CSV rows. The top candidates whose tabular content is the *primary* artifact (not incidental):
+No CSV format grammar exists. A heuristic check of `test/schemas/*.json` shows **27 of 34 modes have at least one wide array-of-objects field** (≥3 properties) that would flatten cleanly to CSV rows. The top candidates whose tabular content is the *primary* artifact (not incidental):
 
 - `gametheory.payoffMatrix.entries` — strategic profiles with payoffs
 - `bayesian.evidence` — rows with likelihood and posterior impact
@@ -942,7 +942,7 @@ python test/visual/test-dashboard.py
 
 1. All 9 tests exit 0.
 2. Total wall-clock < 30 seconds.
-3. `test_format_grammars.py` summary says `All 11 format grammars have required structure` (was 9).
+3. `test_format_grammars.py` summary says `All 11 format grammars have required structure`.
 4. `test_artifact_consistency.py` includes the new `MODE_DISPLAY_NAMES` check in its output.
 
 **If any test fails:** Do NOT proceed to T15. Return to the failing task (T1-T11) and fix the root cause. Re-run T14 after fixing.
@@ -1087,7 +1087,7 @@ The workflow rule says "fix all issues regardless of scale", but scale without a
 
 **Escalation criterion:** if the review team produces **more than 10 High-or-Critical findings total**, or if any finding says "the release should not ship", pause Wave 3 and return control to the user with a summary of the findings. The user decides whether to fix-and-proceed, roll back, or re-scope.
 
-This budget cap respects both the "fix everything" rule AND the reality that a 98-finding review (like the one PR #1 received) cannot be addressed in the same release cycle without pushing out the schedule indefinitely.
+This budget cap respects both the "fix everything" rule AND the reality that a high-finding review (e.g., 90+ findings) cannot be addressed in the same release cycle without pushing out the schedule indefinitely.
 
 ### Gate 3 — After Wave 3 (release gate)
 
