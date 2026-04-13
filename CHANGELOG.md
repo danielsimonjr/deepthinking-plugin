@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+Docs and planning work — no code changes. Captures forward-looking analysis and expanded contributor guidance produced by an RLM-driven deep-dive over the entire reference corpus, plus a 5-specialist (2× Opus + 3× Sonnet) review team pass and a HonestClaude programmatic verification pass.
+
+### Added
+
+- **`docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md`** — a 421-line forward-looking inventory artifact identifying which reasoning modes and output formats are referenced in the corpus but not yet implemented. Three review rounds: post-synthesis verification, 5-specialist review team, and HonestClaude programmatic verification. Final tier counts: 0 Tier 1 modes (intentionally — the plugin is essentially feature-complete on the modes side), 1 Tier 2 mode (`decisionanalysis`, on hold pending a design spike), 16 Tier 3 modes (rejected with rationale), 2 Tier 1 formats (`latex-math`, `csv`), 3 Tier 2 formats, 7 Tier 3 formats. The artifact also enumerates 5 strategic gaps the team flagged that are not directly roadmap items but should be on the maintainer's radar (mode-count ceiling, smoke test scalability, mode deprecation path, telemetry/feedback gap, hybrid mode evolution).
+
+### Changed
+
+- **`CLAUDE.md`** — substantially expanded based on session learnings:
+  - **34-mode invariant promoted from 9 places to 10 places.** Added `MODE_DISPLAY_NAMES` dict in `scripts/render-html-dashboard.py` (line ~28) as the 10th sync location. **No automated check enforces this** — `test_artifact_consistency.py` only covers items 1–5 and 9; manually `grep MODE_DISPLAY_NAMES` after any mode-set change. Drift surfaces only as a wrong dashboard title (the fallback `mode.capitalize() + " Reasoning"` is wrong for compound names like `gametheory` → "Game Theory" or `firstprinciples` → "First Principles Reasoning").
+  - **New design principle: "Some validation rules live in SKILL.md prose, not in JSON Schema."** JSON Schema cannot express constraints like "exactly one element of this array has `isActual: true`" or "at least two distinct hypotheses with non-equal scores". These invariants live in the relevant `skills/think-<category>/SKILL.md` files and are enforced only by the model following the prompt. Examples documented inline: `counterfactual` requires exactly one condition with `isIntervention: true`; `modal` requires exactly one world with `isActual: true`; `abductive` requires ≥2 distinct hypotheses (the schema only says `minItems: 1`); `historical` requires ≥2 episodes per pattern. Per-mode catalog in `memory/project_skill_invariants.md`.
+  - **New "Out of scope" section.** Captures the durable user decisions from the original brainstorming session that should never be reintroduced: no persistent session state across `/think` invocations, no Node.js runtime, no hard `dot`/`mmdc` dependency, no test framework. Each entry explains the rationale so future Claude instances can refuse tempting additions with the right context.
+  - **New "Skills vs slash commands" architectural section.** Captures the v0.1.0 "Unknown skill: sequential" investigation: skills (`skills/<category>/SKILL.md`) are auto-invoked by Claude based on conversation context, slash commands (`commands/<name>.md`) are user-typed. They are completely separate systems. If you want to add a new user-facing `/foo` command, create `commands/foo.md`, NOT `skills/foo/SKILL.md`.
+  - **New "Release sequence (don't reorder)"** under Publishing — documents the 7-step release gate (fast suite → commit → smoke suite → fix any schema drift → re-run fast suite → bump version + CHANGELOG → tag + release) with the warning about hardcoded equality assertions in tests being a smell (the v0.4.1 plugin.json-stuck-at-0.1.0 latent-bug story).
+  - Updated test counts and schema validation count to reflect v0.4.1 state (40 schema validations = 34 valid + 6 invalid; 118 automated checks total).
+
+### Documentation (memory)
+
+- **New `memory/project_skill_invariants.md`** — per-mode validation rules that JSON Schema cannot enforce, consolidated from an RLM deep-dive over all 13 SKILL.md files. Documents 4 schema-unenforceable cardinality rules (counterfactual, modal, historical, abductive), 3 schema-already-enforced rules included for completeness (gametheory, synthesis, engineering), and 2 cross-field semantic rules (firstprinciples confidence chain, bayesian arithmetic display). Also distinguishes these invariants from the 6 v0.4.1 schema bugs in `project_schema_lessons.md` — different problem class, different fix.
+- **New `memory/feedback_milestone_review_workflow.md`** — durable user preference codifying the milestone and PR review sequence (CHANGELOG → memory → commit → push → PR → merge → 5-specialist review team via RLM `llm_query` → HonestClaude pass → fix everything regardless of complexity or time scales). Applies to ALL changes per the user's explicit instruction, not just large milestones. Includes a reviewer-composition table by PR type.
+- **`memory/MEMORY.md` index** updated to reference both new memory files.
+
+### Methodology
+
+This Unreleased entry documents work produced via a multi-stage RLM (Recursive Language Model) methodology, applied iteratively:
+
+1. **Forward-looking inventory** — 6-worker parallel Haiku pass over 101 reference files (plugin docs + deprecated MCP source corpus, 1.17 MB / ~293K tokens) extracted 350+ raw findings about modes/formats/adjacent methods.
+2. **Sonnet synthesis** — single 16K-token Sonnet call dedupes raw findings into a structured roadmap.
+3. **Manual verification round 1** — caught 4 false-positive Tier 1 candidates (Toulmin, Socratic, mermaid, dot) that were already canonical.
+4. **5-specialist review team round 2** — Opus architect + Opus adversary + Sonnet technical + Sonnet domain + Sonnet editorial in parallel via `llm_query`. 99 findings, 11 concordant items. Caught a unified verdict that the round-1 corrections didn't go far enough — `dialectical`, `decisionanalysis`, `structuralcausalmodel`, and the entire computational-Tier 2 cluster failed the same "is this distinct?" test that caught Toulmin and Socratic.
+5. **HonestClaude verification round 3** — programmatic verification of 36 verifiable claims (PASS 33 / WARN 2 / FIX 1 / FAIL 0; the FIX item was a false positive in the verification script itself) plus 41/41 source-citation paths verified to exist on disk. Two real corrections applied (CSV "8-12 of 34" empirical correction to 27 of 34, structuralcausalmodel rejection strengthened with `do-operator` finding from `think-causal/SKILL.md`).
+
+The full audit trail is preserved inside `docs/ROADMAP-FUTURE-MODES-AND-FORMATS.md` under "Methodology Notes" sections (rounds 1, 2, and 3).
+
 ## [0.4.1] - 2026-04-12
 
 ### Security
