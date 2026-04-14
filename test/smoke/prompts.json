@@ -2,7 +2,7 @@
   {"mode": "sequential", "prompt": "Break down the steps to migrate our Postgres database to a new region."},
   {"mode": "shannon", "prompt": "Decompose the problem of reducing p99 latency on our user-search API."},
   {"mode": "hybrid", "prompt": "Should we rewrite the auth system in Rust? This requires comparing safety, performance, team expertise, and migration cost."},
-  {"mode": "inductive", "prompt": "Given these three incidents, what pattern do they share? (1) Deploy on Mon 2026-04-06 failed with DB timeout. (2) Deploy on Wed 2026-04-08 failed with DB timeout. (3) Deploy on Fri 2026-04-10 failed with DB timeout."},
+  {"mode": "inductive", "prompt": "Analyze these 5 checkout failures and 2 checkout successes to find the pattern and generalize. Failures: (F1) mobile Safari, credit card, 2026-03-01, $120. (F2) mobile Safari, credit card, 2026-03-02, $85. (F3) mobile Chrome, credit card, 2026-03-03, $210. (F4) desktop Firefox, credit card, 2026-03-04, $45. (F5) mobile Safari, credit card, 2026-03-05, $310. Successes: (S1) mobile Safari, PayPal, 2026-03-02, $75. (S2) desktop Chrome, credit card, 2026-03-03, $95. What's the generalization and how confident are you in it?"},
   {"mode": "deductive", "prompt": "If every published blog post must have an author, and every author must be a registered user account, and post P was just published, what must be true about post P? Show the intermediate inference steps explicitly — do not just give the final answer."},
   {"mode": "abductive", "prompt": "Users on the analytics dashboard see 503 errors only on Tuesday mornings 9-10 AM. Database CPU spikes to 95% during that window. What is the best explanation?"},
   {"mode": "mathematics", "prompt": "Prove that the square root of 2 is irrational."},

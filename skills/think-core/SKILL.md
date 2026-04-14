@@ -38,19 +38,43 @@ Inductive reasoning moves from specific observations to general principles. You 
 
 1. **List every observation.** Do not summarize prematurely. Each observation is a concrete, specific case.
 2. **Look for the invariant.** What is true in every observation? What varies?
-3. **State the pattern.** A short phrase naming the invariant.
-4. **Form the generalization.** One sentence extending the pattern beyond the observed cases.
-5. **Assess confidence.** A number in [0, 1] reflecting strength of inference. Consider:
+3. **Decide: atomic or multi-step?** If the induction is a single holistic jump from observations to generalization, stay flat. If the reasoning genuinely unfolds as progressive refinement (each observation tranche revises the generalization), Mill's methods of causal induction (agreement, difference, joint method), or hierarchical generalization (generalize within sub-groups, then across), populate `inductionSteps[]`.
+4. **State the pattern.** A short phrase naming the invariant.
+5. **Form the generalization.** One sentence extending the pattern beyond the observed cases.
+6. **Assess confidence.** A number in [0, 1] reflecting strength of inference. Consider:
    - **Sample size** — more observations → higher confidence (within reason)
    - **Homogeneity** — if observations vary in relevant ways, the generalization is stronger
    - **Counterexamples** — any known cases where the pattern fails
-6. **Note counterexamples.** Known exceptions lower confidence and narrow the generalization's scope.
+7. **Note counterexamples.** Known exceptions lower confidence and narrow the generalization's scope.
+
+### Multi-step inductions — when to use `inductionSteps[]`
+
+Most inductive reasoning is **holistic** — you see the pattern all at once, not by grinding through observations one at a time. For simple enumerative inductions ("3 data points all show X → conclusion X is general"), stay flat. The `inductionSteps[]` field is reserved for cases where the reasoner genuinely forms an intermediate claim, tests it against more observations, and revises. The natural multi-step cases are:
+
+1. **Progressive Bayesian refinement** — early observations produce a weak initial belief; later observations strengthen, weaken, or reverse it. Each step represents the reasoner's belief at a specific point in time, given only the data available at that point. A/B test evolution, sequential hypothesis testing, and incremental sensor fusion all fit this case. Each step's `inductionMethod` is typically `bayesianUpdate (weak prior)` / `(reinforced)` / `(revising)` / `(reversal)`.
+2. **Mill's methods of causal induction** — method of agreement (all positive cases share an antecedent), method of difference (positive vs negative cases differ in one antecedent), joint method (both combined), concomitant variation (magnitude covaries), residues (known effects subtracted from total). Each method is a distinct step contributing a specific class of evidence toward a causal claim. The final step synthesizes. NOTE: if you label an intermediate step "method of difference", the step must genuinely compare a positive case against a negative case holding other factors constant — don't use the name for what is really an enumerative step.
+3. **Hierarchical generalization** — generalize within each sub-group (one step per group), then generalize across the sub-group generalizations (a synthesis step). Useful when the observation set has natural strata (e.g., different browsers, different regions, different customer tiers).
+4. **Eliminative induction** — each step rules out a competing hypothesis based on the observations, narrowing the hypothesis space. The final step commits to the surviving hypothesis. Closest to abductive reasoning; use inductive when the evidence is cumulative (each step rules out more) rather than competitive (all hypotheses scored simultaneously).
+5. **Analogical reasoning chains** — each step extends or refines a structural mapping from a source domain to a target domain, potentially introducing additional source analogs. The final step commits to an analogical conclusion with the analogy's limits made explicit.
+
+Each step has: a `stepNumber` (sequential, starting at 1), `observationsUsed[]` (0-indexed references into the top-level `observations[]`), `stepsUsed[]` (references to earlier step numbers, never forward or self), `intermediateGeneralization` (the generalization formed at this step), and `inductionMethod` (name of the method applied — free-text; common values include `enumerative`, `statistical`, `analogical`, `bayesianUpdate`, `eliminative`, `causal (method of agreement)`, `causal (method of difference)`, `causal (joint method)`, `causal (concomitant variation)`, `causal (residues)`, `mixed`, `other`).
+
+**Enforced invariants** (`test/test_skill_invariants.py::check_inductive`):
+- Step numbers must be sequential 1, 2, 3, ... with no gaps
+- `stepsUsed[]` may only reference prior, existing steps (never forward, never self, never nonexistent step 0)
+- `observationsUsed[]` indices must be valid positions in `observations[]`
+- Every step must derive from at least one observation or prior step — a free-standing assertion isn't a step
+- The final step's `intermediateGeneralization` must match the top-level `generalization` (the chain must close)
+
+**Authorship guidance** (NOT enforced by the test — "meaningfully different" is inherently fuzzy):
+- Each step's `intermediateGeneralization` should be genuinely different from the previous step (narrower, broader, or revised — not a restatement). A chain of near-identical intermediate generalizations is a sign the multi-step shape isn't earning its keep and the flat shape would be clearer.
+- The `inductionMethod` labels must be honest. If step 1 is really just enumerative ("all failures share attribute X"), call it `enumerative`, not `causal (method of agreement)`. Method of agreement is specifically about *causal* inference from a shared antecedent, and claiming the label without doing the reasoning is a form of inflation.
 
 ### Output Format
 
 See `reference/output-formats/inductive.md` for the authoritative JSON schema.
 
-### Quick Template
+### Quick Template (atomic induction)
 
 ```json
 {
@@ -64,6 +88,35 @@ See `reference/output-formats/inductive.md` for the authoritative JSON schema.
 }
 ```
 
+### Quick Template (multi-step induction)
+
+```json
+{
+  "mode": "inductive",
+  "observations": ["<obs 0>", "<obs 1>", "<obs 2>", "<obs 3>"],
+  "pattern": "<invariant in short form>",
+  "generalization": "<final general principle in one sentence>",
+  "confidence": <0.0 to 1.0>,
+  "sampleSize": <integer>,
+  "inductionSteps": [
+    {
+      "stepNumber": 1,
+      "observationsUsed": [0, 1],
+      "stepsUsed": [],
+      "intermediateGeneralization": "<initial pattern derived from first tranche>",
+      "inductionMethod": "enumerative"
+    },
+    {
+      "stepNumber": 2,
+      "observationsUsed": [2, 3],
+      "stepsUsed": [1],
+      "intermediateGeneralization": "<refined pattern after incorporating new observations>",
+      "inductionMethod": "causal (method of difference)"
+    }
+  ]
+}
+```
+
 ### Verification Before Emitting
 
 - `mode` is exactly `"inductive"`
@@ -72,8 +125,17 @@ See `reference/output-formats/inductive.md` for the authoritative JSON schema.
 - `confidence` is lower when `sampleSize` is small OR `counterexamples` are present
 - `generalization` is logically supported by the observations, not a leap
 - `pattern` (if included) actually appears in every observation
+- If `inductionSteps[]` is present (enforced):
+  - Step numbers are sequential and unique (1, 2, 3, ...)
+  - Each step's `stepsUsed[]` only references earlier steps (step 3 may reference 1 or 2, never 4)
+  - Each step's `observationsUsed[]` indices are all valid (< length of `observations[]`)
+  - Every step has at least one non-empty input — `observationsUsed[]` or `stepsUsed[]` must not both be empty
+  - The final step's `intermediateGeneralization` matches the top-level `generalization` (the chain must close)
+- If `inductionSteps[]` is present (guidance, not enforced):
+  - Each step's `intermediateGeneralization` should be meaningfully different from the previous — narrower, broader, or revised, not a restatement
+  - The `inductionMethod` label on each step should be honest — don't inflate an enumerative step to `causal (method of agreement)` just because all cases share an antecedent
 
-### Worked Example
+### Worked Example — atomic (no `inductionSteps`)
 
 Input: "Given these three incidents, what pattern do they share? (1) Deploy on Mon 2026-04-06 failed with DB connection timeout. (2) Deploy on Wed 2026-04-08 failed with DB connection timeout. (3) Deploy on Fri 2026-04-10 failed with DB connection timeout."
 
@@ -94,7 +156,61 @@ Output:
 }
 ```
 
-Natural-language summary: "Three identical failures with no variation across day-of-week is a strong signal of a structural issue, not flakiness. Confidence is 0.85 (not 1.0) because n=3 is still small and we have not yet ruled out external factors like upstream DNS changes."
+Natural-language summary: "Three identical failures with no variation across day-of-week is a strong signal of a structural issue, not flakiness. Confidence is 0.85 (not 1.0) because n=3 is still small and we have not yet ruled out external factors like upstream DNS changes." No `inductionSteps` — the induction is a single holistic jump.
+
+### Worked Example — multi-step (with `inductionSteps`)
+
+Input: "Here are 4 weeks of A/B test results. Variant A vs control. Week 1: variant A +3.2%, n=1000/arm. Week 2: variant A +4.8%, n=1500/arm. Week 3: variant A +0.4%, n=2000/arm. Week 4: variant A -1.7%, n=2500/arm. What does this actually tell us?"
+
+Output:
+
+```json
+{
+  "mode": "inductive",
+  "observations": [
+    "Week 1 A/B test: variant A +3.2% conversion vs control, n=1000 per arm",
+    "Week 2 A/B test: variant A +4.8% conversion vs control, n=1500 per arm",
+    "Week 3 A/B test: variant A +0.4% conversion vs control, n=2000 per arm",
+    "Week 4 A/B test: variant A -1.7% conversion vs control, n=2500 per arm"
+  ],
+  "pattern": "Early positive signal in weeks 1-2 decayed to zero by week 3 and reversed by week 4, with each week's sample larger than the last",
+  "generalization": "Variant A showed no sustained improvement over control; the early positive signal in weeks 1-2 was a novelty effect that decayed as user adaptation set in over weeks 3-4",
+  "confidence": 0.82,
+  "sampleSize": 7000,
+  "inductionSteps": [
+    {
+      "stepNumber": 1,
+      "observationsUsed": [0],
+      "stepsUsed": [],
+      "intermediateGeneralization": "Variant A appears to improve conversion by roughly 3% relative to control, based on one week of data",
+      "inductionMethod": "bayesianUpdate (weak prior)"
+    },
+    {
+      "stepNumber": 2,
+      "observationsUsed": [1],
+      "stepsUsed": [1],
+      "intermediateGeneralization": "Variant A's advantage is reinforced by week 2 and is now around 4-5% relative to control; the signal is strengthening with a larger sample",
+      "inductionMethod": "bayesianUpdate (reinforced)"
+    },
+    {
+      "stepNumber": 3,
+      "observationsUsed": [2],
+      "stepsUsed": [1, 2],
+      "intermediateGeneralization": "Variant A's advantage is weakening — week 3 shows effectively no difference at the largest sample size so far; either the effect is noisy or it is beginning to reverse",
+      "inductionMethod": "bayesianUpdate (revising)"
+    },
+    {
+      "stepNumber": 4,
+      "observationsUsed": [3],
+      "stepsUsed": [1, 2, 3],
+      "intermediateGeneralization": "Variant A showed no sustained improvement over control; the early positive signal in weeks 1-2 was a novelty effect that decayed as user adaptation set in over weeks 3-4",
+      "inductionMethod": "bayesianUpdate (reversal)"
+    }
+  ]
+}
+```
+
+Natural-language summary: "Four-step progressive Bayesian refinement. Each step represents what the reasoner's belief literally was at that point in time, given the data available then. Step 1 is a weak positive signal. Step 2 reinforces it. Step 3 signals the effect is weakening. Step 4 commits to the reversed final belief. The intermediate generalizations are not decompositions of one analysis — they are historically distinct beliefs that were revised as new data arrived. Confidence is 0.82 because the reversal is consistent and the sample is large, but not higher because we're inferring a causal story (novelty effect) that isn't directly observed."
 
 ---
 

@@ -435,6 +435,111 @@ def check_deductive(thought: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def check_inductive(thought: dict) -> tuple[bool, str]:
+    """Referential integrity of inductionSteps[] (v0.5.3+).
+
+    The optional `inductionSteps[]` field was added in v0.5.3 to support
+    progressive-refinement, Mill's-methods, and hierarchical multi-step
+    inductions. The schema validates the SHAPE of each step (stepNumber,
+    observationsUsed, stepsUsed, intermediateGeneralization, inductionMethod)
+    but cannot express the cross-field semantic rules:
+
+      1. Sequential unique step numbers. Numbers must be 1, 2, 3, ... with
+         no gaps or duplicates.
+      2. No forward references. A step's stepsUsed[] may only reference
+         existing prior step numbers (values in [1, stepNumber-1]).
+      3. Valid observation indices. Every integer in observationsUsed[]
+         must be a valid 0-indexed position into the top-level
+         observations[] array.
+      4. Every step must derive from something. At least one of
+         observationsUsed[] or stepsUsed[] must be non-empty — a step with
+         no inputs has nothing to apply its inductionMethod to.
+      5. Final step closes the chain. The final step's
+         intermediateGeneralization must match the top-level
+         generalization string. Otherwise the chain does not actually
+         derive what the thought claims.
+
+    If inductionSteps is absent or empty, the check is skipped (atomic
+    single-jump inductions are the default and don't need the array).
+    Intentionally does NOT enforce "each step's intermediateGeneralization
+    is different from the previous" — that's a SKILL.md prose rule, not a
+    referential-integrity rule, because the "meaningfully different" check
+    is semantic and fuzzy.
+    """
+    steps = thought.get("inductionSteps")
+    if not isinstance(steps, list) or len(steps) == 0:
+        return True, "ok (no inductionSteps to check)"
+    observations = thought.get("observations", [])
+    n_obs = len(observations) if isinstance(observations, list) else 0
+
+    # Rule 1: sequential unique step numbers 1..N
+    expected_numbers = list(range(1, len(steps) + 1))
+    actual_numbers = [s.get("stepNumber") for s in steps if isinstance(s, dict)]
+    if actual_numbers != expected_numbers:
+        return False, (
+            f"inductive inductionSteps[] stepNumbers must be sequential "
+            f"1..{len(steps)}, got {actual_numbers} — step numbers must be "
+            "unique, starting at 1, and increment by 1 with no gaps"
+        )
+
+    # Rules 2, 3, 4: per-step referential integrity
+    for s in steps:
+        if not isinstance(s, dict):
+            continue
+        num = s.get("stepNumber")
+        # Rule 2: stepsUsed[] must reference existing earlier steps only
+        steps_used = s.get("stepsUsed", [])
+        if isinstance(steps_used, list):
+            for ref in steps_used:
+                if isinstance(ref, int) and (ref < 1 or ref >= num):
+                    return False, (
+                        f"inductive inductionSteps[{num}] stepsUsed={steps_used} "
+                        f"contains invalid reference {ref} (must be in range "
+                        f"[1, {num - 1}]) — a step can only reference strictly "
+                        "earlier, existing steps"
+                    )
+        # Rule 3: observationsUsed[] indices must be valid
+        obs_used = s.get("observationsUsed", [])
+        if isinstance(obs_used, list):
+            for idx in obs_used:
+                if isinstance(idx, int) and (idx < 0 or idx >= n_obs):
+                    return False, (
+                        f"inductive inductionSteps[{num}] observationsUsed="
+                        f"{obs_used} contains invalid index {idx} — observations "
+                        f"has length {n_obs}, valid indices are 0..{n_obs - 1}"
+                    )
+        # Rule 4: step must derive from at least one observation or prior step
+        obs_empty = not isinstance(obs_used, list) or len(obs_used) == 0
+        steps_empty = not isinstance(steps_used, list) or len(steps_used) == 0
+        if obs_empty and steps_empty:
+            return False, (
+                f"inductive inductionSteps[{num}] has both observationsUsed[] "
+                "and stepsUsed[] empty — every step must derive from at least "
+                "one observation or prior step, otherwise it has no input to "
+                "apply the inductionMethod to"
+            )
+
+    # Rule 5: final step's intermediateGeneralization closes the chain
+    final_step = steps[-1] if isinstance(steps[-1], dict) else None
+    top_gen = thought.get("generalization")
+    if final_step is not None and isinstance(top_gen, str):
+        final_ig = final_step.get("intermediateGeneralization")
+        if isinstance(final_ig, str):
+            # Whitespace / trailing-period normalization so minor formatting
+            # differences don't cause false positives. Exact match otherwise.
+            norm_ig = " ".join(final_ig.split()).rstrip(".")
+            norm_top = " ".join(top_gen.split()).rstrip(".")
+            if norm_ig != norm_top:
+                return False, (
+                    f"inductive final inductionSteps[{len(steps)}]."
+                    f"intermediateGeneralization={final_ig!r} does not match "
+                    f"top-level generalization={top_gen!r} — the chain must "
+                    "produce exactly what the thought claims as its top-level "
+                    "generalization"
+                )
+    return True, "ok"
+
+
 # ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
@@ -444,6 +549,7 @@ CHECKS = {
     "counterfactual": check_counterfactual,
     "deductive": check_deductive,
     "historical": check_historical,
+    "inductive": check_inductive,
     "modal": check_modal,
     "firstprinciples": check_firstprinciples,
     "bayesian": check_bayesian,

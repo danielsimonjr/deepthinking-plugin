@@ -49,8 +49,15 @@ These are correctness rules that depend on values across multiple fields, which 
 | `deductive` | **Valid `premisesUsed[]` indices.** Every integer in a step's `premisesUsed[]` must be a valid 0-indexed position into the top-level `premises[]` array (i.e., `0 ≤ index < len(premises)`). | `skills/think-core/SKILL.md` |
 | `deductive` | **Every step must derive from something.** At least one of `premisesUsed[]` or `stepsUsed[]` on each step must be non-empty. A step with no inputs is a free-standing assertion, not a derivation — it has nothing to apply its `inferenceRule` to. | `skills/think-core/SKILL.md` |
 | `deductive` | **Final step closes the chain.** The final step's `intermediateConclusion` must match the top-level `conclusion` (modulo whitespace and a trailing period). Otherwise the chain does not actually derive what the thought claims. | `skills/think-core/SKILL.md` |
+| `inductive` | **`inductionSteps[]` step numbers must be sequential and unique** (v0.5.3+). If `inductionSteps[]` is populated, the `stepNumber` values must form the sequence 1, 2, 3, ... with no gaps and no duplicates. | `skills/think-core/SKILL.md` |
+| `inductive` | **No forward references in `stepsUsed[]`** (v0.5.3+). A step with `stepNumber: N` may only reference prior, existing step numbers (values in the range `[1, N-1]`). No forward references, no self-references, no references to nonexistent step 0. | `skills/think-core/SKILL.md` |
+| `inductive` | **Valid `observationsUsed[]` indices** (v0.5.3+). Every integer in a step's `observationsUsed[]` must be a valid 0-indexed position into the top-level `observations[]` array. | `skills/think-core/SKILL.md` |
+| `inductive` | **Every step must derive from something** (v0.5.3+). At least one of `observationsUsed[]` or `stepsUsed[]` on each step must be non-empty. A step with no inputs is a free-standing assertion, not a refinement. | `skills/think-core/SKILL.md` |
+| `inductive` | **Final step closes the chain** (v0.5.3+). The final step's `intermediateGeneralization` must match the top-level `generalization` (modulo whitespace and a trailing period). | `skills/think-core/SKILL.md` |
 
-These rules cannot be expressed in JSON Schema because they reference values across multiple levels of the thought tree (step numbers, indices into a sibling array, cross-comparison between final step and top-level field). They are enforced by `test/test_skill_invariants.py::check_deductive()` when a captured or sample thought populates the optional `derivationSteps[]` field. Thoughts that omit the field entirely are skipped; the rules only apply when the author opts into multi-step derivation.
+The `deductive` rules are enforced by `test/test_skill_invariants.py::check_deductive()` when a captured or sample thought populates the optional `derivationSteps[]` field. The `inductive` rules are enforced by `check_inductive()` under the parallel condition: `inductionSteps[]` is populated. Thoughts that omit the respective field entirely are skipped; the rules only apply when the author opts into multi-step derivation or multi-step induction.
+
+These rules cannot be expressed in JSON Schema because they reference values across multiple levels of the thought tree (step numbers, indices into a sibling array, cross-comparison between final step and top-level field).
 
 ## How to apply this list
 
