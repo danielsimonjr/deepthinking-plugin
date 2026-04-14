@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **`test/test_skill_invariants.py`** — new fast test enforcing the 6 per-mode semantic rules catalogued in `docs/SKILL-INVARIANTS.md` that JSON Schema cannot express. Complements the existing schema-validation `test/harness.py` with a layer that catches structural-valid-but-semantically-broken Claude output. Runs against both `test/samples/<mode>-valid.json` (always) and `test/smoke/captured/<mode>-parsed.json` (when present). The checks: `abductive` requires ≥2 hypotheses with non-equal scores; `counterfactual` requires at least one scenario with exactly one `isIntervention=True` condition per scenario; `historical` requires asserted patterns (`verdictApplies=True`) to have ≥2 distinct episodes; `modal` requires exactly one world with `isActual=True` and (if a top-level `actualWorld` reference is present) consistency with it; `firstprinciples` enforces referential integrity of `conclusion.derivationChain` into `derivationSteps` and verifies `conclusion.certainty ≤ min(step.confidence in chain)`; `bayesian` requires `posterior.calculation` to contain ≥2 numbers and at least one true arithmetic operator (`=` alone is insufficient). Fast test count grew from 9 to 10.
+
+### Fixed
+
+- **`test/samples/firstprinciples-valid.json`** — dropped `conclusion.certainty` from `0.92` to `0.88` to match the minimum step confidence in the derivation chain. The previous value violated the "conclusion cannot be more certain than its weakest derivation step" invariant, caught on the first run of the new `test_skill_invariants.py`. This is exactly the class of semantic bug the new test was designed to catch, and it landed in the same PR that added the test.
+
 ## [0.5.1] - 2026-04-13
 
 Patch release fixing a subprocess cleanup bug in the parallel smoke runner introduced by v0.5.0's T6 refactor. No functional changes; single-file targeted fix.
