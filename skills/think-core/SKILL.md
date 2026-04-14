@@ -136,15 +136,37 @@ This is **valid** (the logic is impeccable) but **unsound** (the premises are fa
    - **Modus tollens:** If P then Q. Not Q. Therefore not P.
    - **Hypothetical syllogism:** If P then Q. If Q then R. Therefore if P then R.
    - **Categorical syllogism:** All A are B. X is A. Therefore X is B.
-3. **Check validity.** Does the conclusion follow by logical form alone?
-4. **Check soundness** (if you can). Are the premises actually true?
-5. **State the conclusion** explicitly.
+3. **Decide if the derivation is atomic or multi-step.** A single modus ponens is atomic; a chained inference that requires intermediate conclusions is multi-step (see below).
+4. **Check validity.** Does the conclusion follow by logical form alone?
+5. **Check soundness** (if you can). Are the premises actually true?
+6. **State the conclusion** explicitly.
+
+### Multi-step derivations — when to use `derivationSteps[]`
+
+For deductions that need more than one inference step, populate the optional `derivationSteps[]` array. Each entry captures one inference with explicit references to what it uses:
+
+- `stepNumber` (1-indexed, sequential)
+- `premisesUsed[]` (0-indexed integer references into `premises[]`)
+- `stepsUsed[]` (references to prior `stepNumber` values — no forward references)
+- `intermediateConclusion` (the fact derived at this step)
+- `inferenceRule` (free text: `"modus ponens"`, `"modus tollens"`, `"hypothetical syllogism"`, etc.)
+
+**Use `derivationSteps[]` when:**
+- The reasoning chains two or more distinct inferences
+- A reader auditing the proof benefits from seeing intermediate claims
+- You want to explicitly label which rule is applied at each step
+
+**Omit `derivationSteps[]` when:**
+- The deduction is a single inference (one modus ponens, one syllogism)
+- The intermediate conclusions are trivial or would be boilerplate
+
+The final step's `intermediateConclusion` should match (or very closely match) the top-level `conclusion` — the chain resolves into the conclusion, not to a different one.
 
 ### Output Format
 
 See `reference/output-formats/deductive.md` for the authoritative JSON schema.
 
-### Quick Template
+### Quick Template (atomic deduction, no chain)
 
 ```json
 {
@@ -157,6 +179,35 @@ See `reference/output-formats/deductive.md` for the authoritative JSON schema.
 }
 ```
 
+### Quick Template (multi-step deduction)
+
+```json
+{
+  "mode": "deductive",
+  "premises": ["<premise 0>", "<premise 1>", "<premise 2>"],
+  "conclusion": "<the final derived conclusion>",
+  "logicForm": "<e.g., repeated modus ponens>",
+  "derivationSteps": [
+    {
+      "stepNumber": 1,
+      "premisesUsed": [0, 2],
+      "stepsUsed": [],
+      "intermediateConclusion": "<fact derived from premises 0 and 2>",
+      "inferenceRule": "modus ponens"
+    },
+    {
+      "stepNumber": 2,
+      "premisesUsed": [1],
+      "stepsUsed": [1],
+      "intermediateConclusion": "<final conclusion, derived from premise 1 and step 1>",
+      "inferenceRule": "modus ponens"
+    }
+  ],
+  "validityCheck": true,
+  "soundnessCheck": <true, false, or omit>
+}
+```
+
 ### Verification Before Emitting
 
 - `mode` is exactly `"deductive"`
@@ -164,8 +215,14 @@ See `reference/output-formats/deductive.md` for the authoritative JSON schema.
 - `validityCheck` is `true` ONLY if the conclusion *necessarily* follows from the premises
 - If `validityCheck: false`, the conclusion is not actually entailed — flag this in the natural-language summary
 - `soundnessCheck` is `true` only if you can actually verify the premises are true; otherwise omit
+- If `derivationSteps[]` is present:
+  - Step numbers are sequential and unique (1, 2, 3, ...)
+  - Each step's `stepsUsed[]` only references earlier steps (step 3 may reference 1 or 2, never 4)
+  - Each step's `premisesUsed[]` indices are all valid (< length of `premises[]`)
+  - Every step has at least one non-empty input — `premisesUsed[]` or `stepsUsed[]` must not both be empty
+  - The final step's `intermediateConclusion` matches the top-level `conclusion` (this is enforced — the chain must close)
 
-### Worked Example
+### Worked Example — atomic (no `derivationSteps`)
 
 Input: "If all users in the admin group can edit posts, and Alice is in the admin group, can Alice edit posts?"
 
@@ -186,6 +243,45 @@ Output:
 ```
 
 Natural-language summary: "Classic modus ponens. The premises entail the conclusion by logical form, and both premises are stated as given, so soundness is also true. Alice can edit posts."
+
+### Worked Example — multi-step (with `derivationSteps`)
+
+Input: "If any request that fails authentication must be logged to the audit trail, and any audit-trail entry must trigger an alert, and request R failed authentication — must request R trigger an alert?"
+
+Output:
+
+```json
+{
+  "mode": "deductive",
+  "premises": [
+    "Any request that fails authentication must be logged to the audit trail",
+    "Any audit-trail entry must trigger an alert",
+    "Request R failed authentication"
+  ],
+  "conclusion": "Request R must trigger an alert",
+  "logicForm": "repeated modus ponens",
+  "derivationSteps": [
+    {
+      "stepNumber": 1,
+      "premisesUsed": [0, 2],
+      "stepsUsed": [],
+      "intermediateConclusion": "Request R must be logged to the audit trail",
+      "inferenceRule": "modus ponens"
+    },
+    {
+      "stepNumber": 2,
+      "premisesUsed": [1],
+      "stepsUsed": [1],
+      "intermediateConclusion": "Request R must trigger an alert",
+      "inferenceRule": "modus ponens"
+    }
+  ],
+  "validityCheck": true,
+  "soundnessCheck": true
+}
+```
+
+Natural-language summary: "Chained modus ponens in two steps. Step 1 applies premise 0 to premise 2 (R failed auth → R must be logged). Step 2 applies premise 1 to step 1's conclusion (R is now a logged audit entry → must trigger an alert). Both steps use modus ponens; the chain is valid and, given all three premises as stated, sound."
 
 ---
 

@@ -40,6 +40,18 @@ The first four rows (`abductive`, `counterfactual`, `historical`, `modal`) are *
 
 These are correctness rules that depend on values across multiple fields, which JSON Schema cannot validate without custom keyword extensions.
 
+### Referential integrity rules (v0.5.2+)
+
+| Mode | Invariant | Skill file |
+|---|---|---|
+| `deductive` | **`derivationSteps[]` step numbers must be sequential and unique.** If `derivationSteps[]` is populated, the `stepNumber` values must form the sequence 1, 2, 3, ... with no gaps and no duplicates. | `skills/think-core/SKILL.md` |
+| `deductive` | **No forward references in `stepsUsed[]`.** A step with `stepNumber: N` may only reference prior step numbers (values strictly less than N) in its `stepsUsed[]` array. Step 3 can reference 1 or 2; step 3 cannot reference 4 or itself. | `skills/think-core/SKILL.md` |
+| `deductive` | **Valid `premisesUsed[]` indices.** Every integer in a step's `premisesUsed[]` must be a valid 0-indexed position into the top-level `premises[]` array (i.e., `0 ≤ index < len(premises)`). | `skills/think-core/SKILL.md` |
+| `deductive` | **Every step must derive from something.** At least one of `premisesUsed[]` or `stepsUsed[]` on each step must be non-empty. A step with no inputs is a free-standing assertion, not a derivation — it has nothing to apply its `inferenceRule` to. | `skills/think-core/SKILL.md` |
+| `deductive` | **Final step closes the chain.** The final step's `intermediateConclusion` must match the top-level `conclusion` (modulo whitespace and a trailing period). Otherwise the chain does not actually derive what the thought claims. | `skills/think-core/SKILL.md` |
+
+These rules cannot be expressed in JSON Schema because they reference values across multiple levels of the thought tree (step numbers, indices into a sibling array, cross-comparison between final step and top-level field). They are enforced by `test/test_skill_invariants.py::check_deductive()` when a captured or sample thought populates the optional `derivationSteps[]` field. Thoughts that omit the field entirely are skipped; the rules only apply when the author opts into multi-step derivation.
+
 ## How to apply this list
 
 ### When editing a SKILL.md file

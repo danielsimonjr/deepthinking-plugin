@@ -18,6 +18,10 @@ test/.pytest_cache/
 test/captured/
 test/smoke/captured/
 
+# Session review artifacts (local-only RLM review runs)
+.rlm_*.py
+.rlm_*.json
+
 # Build
 dist/
 *.log

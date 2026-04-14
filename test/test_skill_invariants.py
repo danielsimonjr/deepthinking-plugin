@@ -331,6 +331,110 @@ def check_bayesian(thought: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def check_deductive(thought: dict) -> tuple[bool, str]:
+    """Referential integrity of derivationSteps[] (v0.5.2+).
+
+    The optional `derivationSteps[]` field was added in v0.5.2 to support
+    multi-step deductive chains. The schema validates the SHAPE of each
+    step (stepNumber, premisesUsed, stepsUsed, intermediateConclusion,
+    inferenceRule) but cannot express the cross-field semantic rules:
+
+      1. Sequential unique step numbers. Numbers must be 1, 2, 3, ... with
+         no gaps or duplicates.
+      2. No forward references. A step's stepsUsed[] may only reference
+         step numbers STRICTLY LESS THAN its own stepNumber.
+      3. Valid premise indices. Every integer in premisesUsed[] must be a
+         valid 0-indexed position into the top-level premises[] array.
+      4. Every step must derive from something. At least one of
+         premisesUsed[] or stepsUsed[] must be non-empty — a step with no
+         inputs has nothing to apply its inferenceRule to.
+      5. Final step closes the chain. The final step's intermediateConclusion
+         must match the top-level `conclusion` string. Otherwise the chain
+         does not actually derive what the thought claims.
+
+    If derivationSteps is absent or empty, the check is skipped (atomic
+    single-jump deductions are the default and don't need the array).
+    """
+    steps = thought.get("derivationSteps")
+    if not isinstance(steps, list) or len(steps) == 0:
+        return True, "ok (no derivationSteps to check)"
+    premises = thought.get("premises", [])
+    n_premises = len(premises) if isinstance(premises, list) else 0
+
+    # Rule 1: sequential unique step numbers 1..N
+    expected_numbers = list(range(1, len(steps) + 1))
+    actual_numbers = [s.get("stepNumber") for s in steps if isinstance(s, dict)]
+    if actual_numbers != expected_numbers:
+        return False, (
+            f"deductive derivationSteps[] stepNumbers must be sequential "
+            f"1..{len(steps)}, got {actual_numbers} — step numbers must be "
+            "unique, starting at 1, and increment by 1 with no gaps"
+        )
+
+    # Rules 2, 3, 4: per-step referential integrity
+    for s in steps:
+        if not isinstance(s, dict):
+            continue
+        num = s.get("stepNumber")
+        # Rule 2: stepsUsed[] must reference existing earlier steps only.
+        # Valid range is [1, num-1]: step numbers start at 1 (Rule 1), and
+        # no forward or self references are allowed. A ref of 0 or negative
+        # points to a step that doesn't exist; a ref >= num is forward/self.
+        steps_used = s.get("stepsUsed", [])
+        if isinstance(steps_used, list):
+            for ref in steps_used:
+                if isinstance(ref, int) and (ref < 1 or ref >= num):
+                    return False, (
+                        f"deductive derivationSteps[{num}] stepsUsed={steps_used} "
+                        f"contains invalid reference {ref} (must be in range "
+                        f"[1, {num - 1}]) — a step can only reference strictly "
+                        "earlier, existing steps"
+                    )
+        # Rule 3: premisesUsed[] indices must be valid
+        prems_used = s.get("premisesUsed", [])
+        if isinstance(prems_used, list):
+            for idx in prems_used:
+                if isinstance(idx, int) and (idx < 0 or idx >= n_premises):
+                    return False, (
+                        f"deductive derivationSteps[{num}] premisesUsed={prems_used} "
+                        f"contains invalid index {idx} — premises has length "
+                        f"{n_premises}, valid indices are 0..{n_premises - 1}"
+                    )
+        # Rule 4: step must derive from at least one premise or prior step.
+        # A step with both arrays empty has no input to apply inferenceRule
+        # to — it would be a free-standing assertion, not a derivation.
+        prems_empty = not isinstance(prems_used, list) or len(prems_used) == 0
+        steps_empty = not isinstance(steps_used, list) or len(steps_used) == 0
+        if prems_empty and steps_empty:
+            return False, (
+                f"deductive derivationSteps[{num}] has both premisesUsed[] and "
+                "stepsUsed[] empty — every step must derive from at least one "
+                "premise or prior step, otherwise it has no input to apply "
+                "the inferenceRule to"
+            )
+
+    # Rule 5: final step's intermediateConclusion closes the chain
+    final_step = steps[-1] if isinstance(steps[-1], dict) else None
+    top_conclusion = thought.get("conclusion")
+    if final_step is not None and isinstance(top_conclusion, str):
+        final_ic = final_step.get("intermediateConclusion")
+        if isinstance(final_ic, str):
+            # Normalize whitespace so trailing newlines / double spaces don't
+            # cause false positives. We require exact-after-normalization
+            # match — anything weaker would let subtly different strings slip
+            # through (e.g., "Post P has an author" vs "Post P has an author.").
+            norm_ic = " ".join(final_ic.split()).rstrip(".")
+            norm_top = " ".join(top_conclusion.split()).rstrip(".")
+            if norm_ic != norm_top:
+                return False, (
+                    f"deductive final derivationSteps[{len(steps)}]."
+                    f"intermediateConclusion={final_ic!r} does not match "
+                    f"top-level conclusion={top_conclusion!r} — the chain "
+                    "must derive exactly what the thought claims"
+                )
+    return True, "ok"
+
+
 # ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
@@ -338,6 +442,7 @@ def check_bayesian(thought: dict) -> tuple[bool, str]:
 CHECKS = {
     "abductive": check_abductive,
     "counterfactual": check_counterfactual,
+    "deductive": check_deductive,
     "historical": check_historical,
     "modal": check_modal,
     "firstprinciples": check_firstprinciples,

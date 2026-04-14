@@ -1,11 +1,28 @@
 {
   "mode": "deductive",
   "premises": [
-    "All users in the admin group can edit posts",
-    "Alice is in the admin group"
+    "Any request that fails authentication must be logged to the audit trail",
+    "Any audit-trail entry must trigger an alert",
+    "Request R failed authentication"
   ],
-  "conclusion": "Alice can edit posts",
-  "logicForm": "modus ponens",
+  "conclusion": "Request R must trigger an alert",
+  "logicForm": "repeated modus ponens",
+  "derivationSteps": [
+    {
+      "stepNumber": 1,
+      "premisesUsed": [0, 2],
+      "stepsUsed": [],
+      "intermediateConclusion": "Request R must be logged to the audit trail",
+      "inferenceRule": "modus ponens"
+    },
+    {
+      "stepNumber": 2,
+      "premisesUsed": [1],
+      "stepsUsed": [1],
+      "intermediateConclusion": "Request R must trigger an alert",
+      "inferenceRule": "modus ponens"
+    }
+  ],
   "validityCheck": true,
   "soundnessCheck": true
 }
