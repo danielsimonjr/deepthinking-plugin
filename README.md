@@ -4,7 +4,7 @@ Structured reasoning methods for Claude Code. This plugin teaches Claude 34 reas
 
 ## Status
 
-**v0.5.3 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 13 output formats supported. Both `deductive` and `inductive` now support optional multi-step reasoning chains (`derivationSteps[]` and `inductionSteps[]` respectively). See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.5.3 progression.
+**v0.5.4 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 13 output formats supported. The full core reasoning triad — `deductive`, `inductive`, and `abductive` — now supports optional multi-step reasoning chains (`derivationSteps[]`, `inductionSteps[]`, and `abductionSteps[]` respectively). See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.5.4 progression.
 
 ## Install
 

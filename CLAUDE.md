@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Claude Code plugin that teaches Claude **34 structured reasoning modes** (Bayesian, causal, game theory, etc.) as native prompt-based skills. There is no runtime server — Claude learns each method from skill content and produces structured JSON thoughts directly.
 
-**Current version:** v0.5.3. GitHub: https://github.com/danielsimonjr/deepthinking-plugin.
+**Current version:** v0.5.4. GitHub: https://github.com/danielsimonjr/deepthinking-plugin.
 
 **Read before making changes:**
 - `ARCHITECTURE.md` — the three-layer design (reasoning skills / output-format grammars / runtime helpers) and invocation flow diagrams
 - `README.md` — user-facing install and command reference
-- `CHANGELOG.md` — the v0.1.0 → v0.5.3 progression and what each release shipped
+- `CHANGELOG.md` — the v0.1.0 → v0.5.4 progression and what each release shipped
 
 This file covers what isn't in any of those: the mode-set invariant, the design principles you must not break, common commands, and gotchas learned during development.
 
@@ -193,7 +193,7 @@ gh release create v0.X.Y --title "v0.X.Y — summary" --notes "..."
 
 **Watch out for hardcoded equality assertions in tests.** v0.4.1 fixed a latent bug where `plugin.json` was stuck at `0.1.0` for **four releases** because `test_plugin_json.py` had `assert version == "0.1.0"` and was passing vacuously. The fix is to use `re.match(r"^\d+\.\d+\.\d+$", version)`. If you add a new test that checks a count or version, prefer regex / range checks over literal equality — the literal becomes a silent correctness hole the moment the value changes.
 
-v0.5.3 is the current release; see the GitHub Releases page for the full history.
+v0.5.4 is the current release; see the GitHub Releases page for the full history.
 
 ## What's NOT in this file
 

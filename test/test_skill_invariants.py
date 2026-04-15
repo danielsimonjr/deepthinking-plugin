@@ -49,14 +49,54 @@ CAPTURED_DIR = PLUGIN_ROOT / "test" / "smoke" / "captured"
 
 
 def check_abductive(thought: dict) -> tuple[bool, str]:
-    """≥2 hypotheses with non-equal scores.
+    """≥2 hypotheses with non-equal scores + abductionSteps[] referential integrity (v0.5.4+).
 
-    JSON Schema has only `hypotheses.minItems: 1` on abductive, which is
-    under-constrained: a thought with a single hypothesis is not abduction
-    (abduction is explicitly inference to the BEST explanation, which
-    requires at least one competitor). Two hypotheses with IDENTICAL scores
-    are also insufficient — the whole point is to have a preference ordering.
+    Two distinct classes of invariant:
+
+    (1) Base cardinality/distinctness rule (original, pre-v0.5.4):
+        JSON Schema has only `hypotheses.minItems: 1` on abductive, which is
+        under-constrained. A thought with a single hypothesis is not
+        abduction (abduction is inference to the BEST explanation and needs
+        at least one competitor). Two hypotheses with IDENTICAL scores are
+        also insufficient — the whole point is a preference ordering.
+
+    (2) Referential integrity for the optional abductionSteps[] field
+        (v0.5.4+). When populated, each step must satisfy:
+
+        2a. Sequential unique step numbers 1..N.
+        2b. stepsUsed[] must reference existing earlier steps only
+            (values in [1, stepNumber-1]).
+        2c. triggerObservation (if non-null) must match an id in the
+            top-level observations[] array.
+        2d. Every id in hypothesesGenerated[] must match an id in the
+            top-level hypotheses[] array.
+        2e. Every id in hypothesesEliminated[] must match an id in the
+            top-level hypotheses[] array.
+        2f. Every step must do something — at least one of
+            hypothesesGenerated[], hypothesesEliminated[], or stepsUsed[]
+            must be non-empty.
+        2g. Chain closure: if bestExplanation is present, its id must
+            appear in at least one step's hypothesesGenerated[] — the
+            committed hypothesis must have been explicitly introduced
+            during the stepwise abduction process, not pulled from nowhere.
+        2h. Commitment coherence: the committed bestExplanation.id must
+            NOT appear in any step's hypothesesEliminated[]. Generating a
+            hypothesis and then eliminating it, only to commit to it as
+            the final answer, is internally inconsistent.
+        2i. No duplicate generation: each hypothesis id may appear in at
+            most one step's hypothesesGenerated[] across the entire
+            chain. "Generating" an already-introduced hypothesis is
+            semantically empty.
+        2j. No re-generation after elimination: once a hypothesis is
+            listed in some step's hypothesesEliminated[], no later step
+            may list it in hypothesesGenerated[]. This blocks silent
+            rehabilitation; if the reasoner decides an elimination was
+            wrong, the honest move is to author a new thought.
+
+    Thoughts that omit abductionSteps[] entirely are exempt from class (2)
+    but still subject to class (1).
     """
+    # ---- Class 1: the original ≥2-distinct-scores rule ----
     hyps = thought.get("hypotheses")
     if not isinstance(hyps, list):
         return False, "no hypotheses array"
@@ -91,6 +131,146 @@ def check_abductive(thought: dict) -> tuple[bool, str]:
             f"abductive requires hypotheses with non-equal scores, got "
             f"{scores_present} — abduction is a preference ordering, not a tie"
         )
+
+    # ---- Class 2: abductionSteps[] referential integrity (v0.5.4+) ----
+    steps = thought.get("abductionSteps")
+    if not isinstance(steps, list) or len(steps) == 0:
+        return True, "ok (no abductionSteps to check)"
+
+    # Pre-index the observation and hypothesis id sets for O(1) lookups.
+    obs_ids = {
+        o.get("id")
+        for o in thought.get("observations", [])
+        if isinstance(o, dict) and isinstance(o.get("id"), str)
+    }
+    hyp_ids = {
+        h.get("id")
+        for h in hyps
+        if isinstance(h, dict) and isinstance(h.get("id"), str)
+    }
+
+    # Rule 2a: sequential unique step numbers 1..N
+    expected_numbers = list(range(1, len(steps) + 1))
+    actual_numbers = [s.get("stepNumber") for s in steps if isinstance(s, dict)]
+    if actual_numbers != expected_numbers:
+        return False, (
+            f"abductive abductionSteps[] stepNumbers must be sequential "
+            f"1..{len(steps)}, got {actual_numbers} — step numbers must be "
+            "unique, starting at 1, and increment by 1 with no gaps"
+        )
+
+    # Rules 2b-2f + 2i + 2j: per-step integrity. Track running sets for
+    # duplicate-generation and re-generation-after-elimination checks.
+    all_generated_ids: set = set()
+    all_eliminated_ids: set = set()
+    for s in steps:
+        if not isinstance(s, dict):
+            continue
+        num = s.get("stepNumber")
+
+        # Rule 2b: stepsUsed[] must reference existing earlier steps only
+        steps_used = s.get("stepsUsed", [])
+        if isinstance(steps_used, list):
+            for ref in steps_used:
+                if isinstance(ref, int) and (ref < 1 or ref >= num):
+                    return False, (
+                        f"abductive abductionSteps[{num}] stepsUsed={steps_used} "
+                        f"contains invalid reference {ref} (must be in range "
+                        f"[1, {num - 1}]) — a step can only reference strictly "
+                        "earlier, existing steps"
+                    )
+
+        # Rule 2c: triggerObservation must reference a valid observation id
+        trig = s.get("triggerObservation")
+        if isinstance(trig, str) and trig not in obs_ids:
+            return False, (
+                f"abductive abductionSteps[{num}] triggerObservation={trig!r} "
+                f"does not match any id in observations[] — valid ids are "
+                f"{sorted(obs_ids) or '[]'}"
+            )
+
+        # Rule 2d: hypothesesGenerated[] ids must reference valid hypotheses
+        # Rule 2i: no duplicate generation across the chain
+        # Rule 2j: no re-generation of a previously-eliminated hypothesis
+        gen = s.get("hypothesesGenerated", [])
+        if isinstance(gen, list):
+            for hid in gen:
+                if isinstance(hid, str):
+                    if hid not in hyp_ids:
+                        return False, (
+                            f"abductive abductionSteps[{num}] hypothesesGenerated "
+                            f"contains id {hid!r} that does not match any id in "
+                            f"hypotheses[] — valid ids are {sorted(hyp_ids)}"
+                        )
+                    if hid in all_generated_ids:
+                        return False, (
+                            f"abductive abductionSteps[{num}] hypothesesGenerated "
+                            f"contains id {hid!r} that was already generated by "
+                            f"an earlier step — each hypothesis may appear in "
+                            f"hypothesesGenerated[] at most once across the chain"
+                        )
+                    if hid in all_eliminated_ids:
+                        return False, (
+                            f"abductive abductionSteps[{num}] hypothesesGenerated "
+                            f"contains id {hid!r} that was eliminated by an earlier "
+                            f"step — re-generating an eliminated hypothesis is a "
+                            f"silent rehabilitation; author a new thought instead"
+                        )
+                    all_generated_ids.add(hid)
+
+        # Rule 2e: hypothesesEliminated[] ids must reference valid hypotheses
+        elim = s.get("hypothesesEliminated", [])
+        if isinstance(elim, list):
+            for hid in elim:
+                if isinstance(hid, str):
+                    if hid not in hyp_ids:
+                        return False, (
+                            f"abductive abductionSteps[{num}] hypothesesEliminated "
+                            f"contains id {hid!r} that does not match any id in "
+                            f"hypotheses[] — valid ids are {sorted(hyp_ids)}"
+                        )
+                    all_eliminated_ids.add(hid)
+
+        # Rule 2f: step must do something
+        gen_empty = not isinstance(gen, list) or len(gen) == 0
+        elim_empty = not isinstance(elim, list) or len(elim) == 0
+        steps_empty = not isinstance(steps_used, list) or len(steps_used) == 0
+        if gen_empty and elim_empty and steps_empty:
+            return False, (
+                f"abductive abductionSteps[{num}] has hypothesesGenerated[], "
+                "hypothesesEliminated[], and stepsUsed[] all empty — every "
+                "step must do something (generate candidates, rule some out, "
+                "or build on a prior step); a free-standing assertion is not "
+                "an abduction step"
+            )
+
+    # Rule 2g: chain closure — bestExplanation.id must have been introduced
+    # somewhere in the step process. The abductive analog of deductive's
+    # "final step's intermediateConclusion matches top-level conclusion".
+    # Rule 2h: commitment coherence — bestExplanation.id must NOT have been
+    # eliminated at any step. Generating a hypothesis, eliminating it, and
+    # then committing to it is internally inconsistent.
+    best = thought.get("bestExplanation")
+    if isinstance(best, dict):
+        best_id = best.get("id")
+        if isinstance(best_id, str):
+            if best_id not in all_generated_ids:
+                return False, (
+                    f"abductive bestExplanation.id={best_id!r} was never "
+                    f"introduced by any step's hypothesesGenerated[] — the "
+                    f"committed hypothesis must have been explicitly generated "
+                    f"during the stepwise abduction process. Generated ids "
+                    f"across all steps: {sorted(all_generated_ids) or '[]'}"
+                )
+            if best_id in all_eliminated_ids:
+                return False, (
+                    f"abductive bestExplanation.id={best_id!r} appears in some "
+                    f"step's hypothesesEliminated[] — cannot commit to a "
+                    f"hypothesis that the chain ruled out. Either remove the "
+                    f"elimination or commit to a different hypothesis. "
+                    f"Eliminated ids across all steps: "
+                    f"{sorted(all_eliminated_ids)}"
+                )
     return True, "ok"
 
 

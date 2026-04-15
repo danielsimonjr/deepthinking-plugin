@@ -423,22 +423,52 @@ Abductive reasoning moves from surprising observations to the best available exp
 
 1. **State the surprising observation.** Describe what you observed, why it is unexpected, and your confidence in the observation itself.
 2. **Generate at least two hypotheses.** Each hypothesis must: (a) actually explain the observation if true, and (b) differ from the others in its assumptions. Do not stop at one — the core move of abduction is comparison.
-3. **List each hypothesis's assumptions.** These are the background claims the hypothesis depends on. Explicit assumptions make each hypothesis falsifiable.
-4. **Derive testable predictions.** For each hypothesis, what would you expect to find if that hypothesis were true? Good predictions are specific and discriminating — different hypotheses should predict different things.
-5. **Collect and classify evidence.** For each piece of available evidence, note which hypothesis it supports, contradicts, or is neutral toward, and how strongly.
-6. **Score each hypothesis.** A number in [0, 1] reflecting overall plausibility after weighing the evaluation criteria. Scores must be distinct — ties indicate the evaluation is unfinished.
-7. **Apply the evaluation criteria.** Score the overall analysis on four dimensions:
+3. **Decide: single-shot or iterative?** If all candidates are generated at once and all evidence is weighed in one pass, stay flat. If the reasoning genuinely unfolds as generate → test prediction → eliminate → commit (over multiple rounds), populate `abductionSteps[]` to make the process visible.
+4. **List each hypothesis's assumptions.** These are the background claims the hypothesis depends on. Explicit assumptions make each hypothesis falsifiable.
+5. **Derive testable predictions.** For each hypothesis, what would you expect to find if that hypothesis were true? Good predictions are specific and discriminating — different hypotheses should predict different things.
+6. **Collect and classify evidence.** For each piece of available evidence, note which hypothesis it supports, contradicts, or is neutral toward, and how strongly.
+7. **Score each hypothesis.** A number in [0, 1] reflecting overall plausibility after weighing the evaluation criteria. Scores must be distinct — ties indicate the evaluation is unfinished.
+8. **Apply the evaluation criteria.** Score the overall analysis on four dimensions:
    - **Parsimony** — Does the best hypothesis avoid unnecessary assumptions? (Occam's Razor)
    - **Explanatory power** — Does it account for all observations, or only some?
    - **Plausibility** — Is the hypothesis consistent with what is already known about the system?
    - **Testability** — Can the hypothesis be checked with feasible observations or experiments?
-8. **Name the best explanation.** Choose the highest-scoring hypothesis as `bestExplanation`. If scores are close (gap < 0.05), flag the ambiguity explicitly in your natural-language summary.
+9. **Name the best explanation.** Choose the highest-scoring hypothesis as `bestExplanation`. If scores are close (gap < 0.05), flag the ambiguity explicitly in your natural-language summary.
+
+### Multi-step abductions — when to use `abductionSteps[]`
+
+Many abductions are genuinely **single-shot** — you see an anomaly, enumerate plausible explanations, weigh them against evidence, and pick the best, all in one pass. For those, keep the flat shape and omit `abductionSteps[]`. The stepwise shape is reserved for cases where the reasoning genuinely unfolded over multiple rounds of generate → test → refine → commit. The natural multi-step process types are:
+
+1. **Progressive hypothesis generation** — the initial observation prompts a first set of candidates; a subsequent observation or evidence check prompts additional candidates at a later step. Each step's `hypothesesGenerated[]` records which hypotheses were introduced when.
+2. **Eliminative narrowing** — hypotheses are ruled out one at a time as evidence lands against them. Each step's `hypothesesEliminated[]` records which were killed and by what (the `stepSummary` names the evidence or argument).
+3. **Hypothetico-deductive cycles** — each step follows a generate-predict-test pattern. The step that tests a prediction has an empty `hypothesesGenerated[]` and uses `hypothesesEliminated[]` (or neither, for a confirmation step that just strengthens a prior hypothesis).
+
+Each step has: `stepNumber` (sequential, starting at 1), `stepSummary` (short narrative of what the reasoner did), `abductionMethod` (free-text), and optional `triggerObservation` (an observation id), `hypothesesGenerated[]` (hypothesis ids), `hypothesesEliminated[]` (hypothesis ids), and `stepsUsed[]` (prior step numbers).
+
+**`abductionMethod` values** — free-text in v0.5.4. The common vocabulary is:
+- `retroduction` — reasoning backward from an observed effect to its possible cause, enumerating candidate explanations. This is the classical Peirce form of abduction and is the right label for a **generation** step that produces candidates from an anomaly. (Note: some authors use "retroduction" and "abduction" synonymously; in this schema, `retroduction` specifically labels the backward-from-effect generative move, and `ibe` labels the final commitment.)
+- `hypothetico-deductive` — deriving a testable prediction from a hypothesis and checking it empirically. Use only when a prediction is actually checked against evidence.
+- `eliminative` — ruling out a hypothesis because evidence falsifies it, or because parsimony / coherence disqualifies it relative to a simpler competitor.
+- `ibe` (inference to the best explanation) — the **commitment** step. Choosing the best explanation from the surviving candidates using the evaluation criteria (parsimony, explanatory power, plausibility, testability). Do NOT use this label for a generation step where nothing has been inferred yet — the move there is `retroduction`.
+- `other` — anything else, with a free-text description in `stepSummary`.
+
+**Enforced invariants** (`test/test_skill_invariants.py::check_abductive`):
+- Step numbers must be sequential 1, 2, 3, ... with no gaps
+- `stepsUsed[]` may only reference existing earlier steps (never forward, never self, never nonexistent step 0)
+- `triggerObservation` (if non-null) must match an id in the top-level `observations[]` array
+- All ids in `hypothesesGenerated[]` and `hypothesesEliminated[]` must match ids in the top-level `hypotheses[]` array
+- Every step must do something — `hypothesesGenerated[]`, `hypothesesEliminated[]`, and `stepsUsed[]` must not all be empty
+- **Chain closure**: `bestExplanation.id` must have been introduced by at least one step's `hypothesesGenerated[]` — the commitment must trace back to the stepwise process, not be pulled from nowhere
+
+**Authorship guidance** (NOT enforced by the test):
+- Each step's `stepSummary` should be genuinely substantive — a one-sentence "just did some thinking" is a sign the multi-step shape isn't earning its keep
+- The `abductionMethod` labels must be honest. If step 1 just generated hypotheses in parallel, call it `ibe`, not `hypothetico-deductive`. Hypothetico-deductive is specifically about *checking a prediction*, and claiming the label without doing the check is inflation.
 
 ### Output Format
 
 See `reference/output-formats/abductive.md` for the authoritative JSON schema.
 
-### Quick Template
+### Quick Template (single-shot abduction)
 
 ```json
 {
@@ -473,6 +503,55 @@ See `reference/output-formats/abductive.md` for the authoritative JSON schema.
 }
 ```
 
+### Quick Template (iterative abduction)
+
+```json
+{
+  "mode": "abductive",
+  "observations": [
+    { "id": "o1", "description": "<anomaly>", "confidence": 0.95 },
+    { "id": "o2", "description": "<follow-up observation>", "confidence": 0.85 }
+  ],
+  "hypotheses": [
+    { "id": "h1", "explanation": "<A>", "assumptions": [], "predictions": [], "score": 0.75 },
+    { "id": "h2", "explanation": "<B>", "assumptions": [], "predictions": [], "score": 0.55 },
+    { "id": "h3", "explanation": "<C>", "assumptions": [], "predictions": [], "score": 0.30 }
+  ],
+  "evaluationCriteria": { "parsimony": 0.7, "explanatoryPower": 0.8, "plausibility": 0.75, "testability": true },
+  "evidence": [],
+  "bestExplanation": { "id": "h1", "explanation": "<A>", "assumptions": [], "predictions": [], "score": 0.75 },
+  "abductionSteps": [
+    {
+      "stepNumber": 1,
+      "stepSummary": "Triggered by o1. Reasoned backward from the observed anomaly to enumerate three candidate explanations covering the plausible root-cause classes.",
+      "abductionMethod": "retroduction",
+      "triggerObservation": "o1",
+      "hypothesesGenerated": ["h1", "h2", "h3"],
+      "hypothesesEliminated": [],
+      "stepsUsed": []
+    },
+    {
+      "stepNumber": 2,
+      "stepSummary": "Checked the prediction from h3 against <evidence>. Prediction was falsified — rule out h3.",
+      "abductionMethod": "hypothetico-deductive",
+      "triggerObservation": null,
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": ["h3"],
+      "stepsUsed": [1]
+    },
+    {
+      "stepNumber": 3,
+      "stepSummary": "With h3 out, compared h1 vs h2 using o2. h1 is the best explanation — commit.",
+      "abductionMethod": "ibe",
+      "triggerObservation": "o2",
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": [],
+      "stepsUsed": [1, 2]
+    }
+  ]
+}
+```
+
 ### Verification Before Emitting
 
 - `mode` is exactly `"abductive"`
@@ -484,20 +563,23 @@ See `reference/output-formats/abductive.md` for the authoritative JSON schema.
 - `parsimony` reflects assumption count — hypotheses with fewer assumptions score higher
 - `explanatoryPower` reflects how many observations the best hypothesis accounts for
 - If any `evidence` is available, it is listed with correct `hypothesisId` references
+- If `abductionSteps[]` is present (enforced):
+  - Step numbers are sequential and unique (1, 2, 3, ...)
+  - Each step's `stepsUsed[]` only references existing earlier steps
+  - Each step's `triggerObservation` (if non-null) is a valid observation id
+  - Each step's `hypothesesGenerated[]` and `hypothesesEliminated[]` all reference valid hypothesis ids
+  - Every step has at least one non-empty input (`hypothesesGenerated[]` / `hypothesesEliminated[]` / `stepsUsed[]`)
+  - `bestExplanation.id` was introduced by some step's `hypothesesGenerated[]` — the chain must close honestly
 
-### Worked Example
+### Worked Example — single-shot (no `abductionSteps`)
 
 Input: "Users on the analytics dashboard are seeing 503 errors, but ONLY on Tuesday mornings between 9–10 AM. What's the best explanation?"
 
-Three hypotheses were generated:
+Three hypotheses were generated and all three were scored against the available evidence in a single parallel pass:
+
 - **h1** (score 0.82): A weekly ETL/scheduled job fires at 09:00 every Tuesday and saturates the database
 - **h2** (score 0.71): The weekly BI report pipeline materializes data at 09:00, causing table lock contention
 - **h3** (score 0.54): Application cache is flushed Monday night, causing a cold-start stampede Tuesday morning
-
-Evidence collected:
-- Application logs confirm a `weekly_etl_job` entry at 09:00:02 every Tuesday — **supporting h1** (strength 0.85)
-- Database slow-query log shows a 47-minute INSERT…SELECT on `report_snapshots` starting at 09:00 — **supporting h2** (strength 0.78)
-- Cache monitoring shows hit rates normal (>90%) at 9 AM Tuesday — **contradicting h3** (strength 0.72)
 
 Output:
 
@@ -505,53 +587,91 @@ Output:
 {
   "mode": "abductive",
   "observations": [
-    { "id": "o1", "description": "Analytics dashboard returns 503 errors exclusively on Tuesday mornings between 9:00 AM and 10:00 AM", "confidence": 0.97 },
-    { "id": "o2", "description": "Error rate returns to zero by 10:05 AM with no manual intervention", "confidence": 0.95 },
-    { "id": "o3", "description": "Affected endpoint is /api/reports/dashboard — other API endpoints remain healthy during the same window", "confidence": 0.92 },
-    { "id": "o4", "description": "Database CPU spikes to 95% during the 9–10 AM Tuesday window; normal the rest of the week", "confidence": 0.88 }
+    { "id": "o1", "description": "Analytics dashboard returns 503 errors exclusively on Tuesday mornings 9-10 AM", "confidence": 0.97 },
+    { "id": "o4", "description": "Database CPU spikes to 95% during the Tuesday 9-10 AM window", "confidence": 0.88 }
   ],
   "hypotheses": [
-    {
-      "id": "h1",
-      "explanation": "A weekly scheduled ETL job runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
-      "assumptions": ["A cron job fires at 09:00 on Tuesdays specifically", "The job issues heavy queries that compete with dashboard traffic", "The connection pool is shared between the job and the dashboard API"],
-      "predictions": ["Cron job logs show a Tuesday 09:00 entry", "Disabling the job would eliminate the 503 window"],
-      "score": 0.82
-    },
-    {
-      "id": "h2",
-      "explanation": "Weekly BI report materialization at 09:00 causes write-heavy lock contention on the reports table",
-      "assumptions": ["BI pipeline writes to the same table the dashboard reads", "Table-level locks are held during materialization"],
-      "predictions": ["Lock-wait logs show contention on the reports table on Tuesdays 09:00–10:00"],
-      "score": 0.71
-    },
-    {
-      "id": "h3",
-      "explanation": "Cache flushed Monday night causes a cold-start stampede when users arrive Tuesday morning",
-      "assumptions": ["Dashboard cache is cleared on Monday nights", "User surge at 9 AM Tuesday overwhelms the DB on cache miss"],
-      "predictions": ["Cache hit rates near zero Tuesday 9–9:30 AM"],
-      "score": 0.54
-    }
+    { "id": "h1", "explanation": "Weekly ETL job at 09:00 Tuesday saturates the database", "assumptions": ["A cron job fires at 09:00 Tuesdays"], "predictions": ["Cron logs show 09:00 Tue entry"], "score": 0.82 },
+    { "id": "h2", "explanation": "Weekly BI report materialization causes lock contention on reports table", "assumptions": ["BI pipeline writes to reports table"], "predictions": ["Lock-wait logs show contention Tue 09:00-10:00"], "score": 0.71 },
+    { "id": "h3", "explanation": "Monday-night cache flush causes Tuesday cold-start stampede", "assumptions": ["Cache is cleared Monday nights"], "predictions": ["Cache hit rates near zero Tue 09:00"], "score": 0.54 }
   ],
-  "evaluationCriteria": {
-    "parsimony": 0.75,
-    "explanatoryPower": 0.88,
-    "plausibility": 0.82,
-    "testability": true
-  },
+  "evaluationCriteria": { "parsimony": 0.75, "explanatoryPower": 0.88, "plausibility": 0.82, "testability": true },
   "evidence": [
-    { "hypothesisId": "h1", "type": "supporting", "description": "weekly_etl_job log entries confirmed at 09:00:02 every Tuesday for six weeks", "strength": 0.85 },
-    { "hypothesisId": "h2", "type": "supporting", "description": "Slow-query log shows 47-minute INSERT…SELECT on report_snapshots starting at 09:00 Tuesdays", "strength": 0.78 },
-    { "hypothesisId": "h3", "type": "contradicting", "description": "Cache hit rates normal (>90%) at 9 AM Tuesday — no cold-start stampede", "strength": 0.72 }
+    { "hypothesisId": "h1", "type": "supporting", "description": "weekly_etl_job log at 09:00:02 every Tuesday", "strength": 0.85 },
+    { "hypothesisId": "h2", "type": "supporting", "description": "47-minute INSERT on report_snapshots Tuesdays 09:00", "strength": 0.78 },
+    { "hypothesisId": "h3", "type": "contradicting", "description": "Cache hit rates normal (>90%) at 9 AM Tuesday", "strength": 0.72 }
   ],
   "bestExplanation": {
     "id": "h1",
-    "explanation": "A weekly scheduled ETL job runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
-    "assumptions": ["A cron job fires at 09:00 on Tuesdays specifically", "The job issues heavy queries that compete with dashboard traffic", "The connection pool is shared between the job and the dashboard API"],
-    "predictions": ["Cron job logs show a Tuesday 09:00 entry", "Disabling the job would eliminate the 503 window"],
+    "explanation": "Weekly ETL job at 09:00 Tuesday saturates the database",
+    "assumptions": ["A cron job fires at 09:00 Tuesdays"],
+    "predictions": ["Cron logs show 09:00 Tue entry"],
     "score": 0.82
   }
 }
 ```
 
-Natural-language summary: "h1 is the best explanation: direct log evidence places the ETL job at exactly 09:00:02 every Tuesday, the database CPU spike aligns precisely with the error window, and the self-healing by 10:05 AM matches the expected job completion time. h2 is credible but explains lock contention rather than outright DB saturation — the two causes may coexist, but h1 has more direct support. h3 is ruled out by the cache hit-rate data. Next step: reschedule the ETL job to 06:00 AM Tuesday and monitor."
+Natural-language summary: "Single-shot abduction. h1 is the best explanation: direct log evidence places the ETL job at exactly 09:00:02 every Tuesday, the database CPU spike aligns precisely with the error window. h3 is ruled out by the normal cache hit-rate data. No `abductionSteps` — all hypotheses were generated and scored in one pass." The reasoning did not genuinely unfold in iterations.
+
+### Worked Example — iterative (with `abductionSteps`)
+
+Same scenario, but the reasoning is shown as it actually unfolded: generate candidates → test a prediction against cache monitoring → eliminate h3 → compare h1 vs h2 and commit.
+
+```json
+{
+  "mode": "abductive",
+  "observations": [
+    { "id": "o1", "description": "Analytics dashboard returns 503 errors exclusively on Tuesday mornings 9-10 AM", "confidence": 0.97 },
+    { "id": "o4", "description": "Database CPU spikes to 95% during the Tuesday 9-10 AM window", "confidence": 0.88 }
+  ],
+  "hypotheses": [
+    { "id": "h1", "explanation": "Weekly ETL job at 09:00 Tuesday saturates the database", "assumptions": ["..."], "predictions": ["..."], "score": 0.82 },
+    { "id": "h2", "explanation": "Weekly BI report materialization causes lock contention", "assumptions": ["..."], "predictions": ["..."], "score": 0.71 },
+    { "id": "h3", "explanation": "Monday-night cache flush causes Tuesday cold-start stampede", "assumptions": ["..."], "predictions": ["..."], "score": 0.34 }
+  ],
+  "evaluationCriteria": { "parsimony": 0.75, "explanatoryPower": 0.88, "plausibility": 0.82, "testability": true },
+  "evidence": [
+    { "hypothesisId": "h1", "type": "supporting", "description": "weekly_etl_job log at 09:00:02 every Tuesday", "strength": 0.85 },
+    { "hypothesisId": "h2", "type": "supporting", "description": "47-minute INSERT on report_snapshots Tuesdays 09:00", "strength": 0.78 },
+    { "hypothesisId": "h3", "type": "contradicting", "description": "Cache hit rates normal (>90%) at 9 AM Tuesday", "strength": 0.72 }
+  ],
+  "bestExplanation": {
+    "id": "h1",
+    "explanation": "Weekly ETL job at 09:00 Tuesday saturates the database",
+    "assumptions": ["..."],
+    "predictions": ["..."],
+    "score": 0.82
+  },
+  "abductionSteps": [
+    {
+      "stepNumber": 1,
+      "stepSummary": "Triggered by the Tuesday-only 503 window (o1). Reasoned backward from the pattern to enumerate three initial hypotheses covering the plausible root-cause classes: compute contention (ETL), lock contention (BI), cold-start (cache).",
+      "abductionMethod": "retroduction",
+      "triggerObservation": "o1",
+      "hypothesesGenerated": ["h1", "h2", "h3"],
+      "hypothesesEliminated": [],
+      "stepsUsed": []
+    },
+    {
+      "stepNumber": 2,
+      "stepSummary": "Checked h3's cache-hit-rate prediction against Tuesday morning cache monitoring. Hit rates were normal (>90%) — prediction falsified, rule out h3.",
+      "abductionMethod": "hypothetico-deductive",
+      "triggerObservation": null,
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": ["h3"],
+      "stepsUsed": [1]
+    },
+    {
+      "stepNumber": 3,
+      "stepSummary": "Compared h1 vs h2 using the database CPU spike evidence (o4). h1's ETL job aligns precisely with the 09:00:02 start and the CPU spike timing; h2's lock-wait signature would produce a different metric profile. h1 is the best explanation — commit.",
+      "abductionMethod": "ibe",
+      "triggerObservation": "o4",
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": [],
+      "stepsUsed": [1, 2]
+    }
+  ]
+}
+```
+
+Natural-language summary: "Three-step iterative abduction. Step 1 generates the hypothesis set. Step 2 falsifies h3 by checking a specific prediction against cache data. Step 3 compares h1 and h2 using the CPU spike evidence and commits. The commitment in `bestExplanation` is h1, which was introduced in step 1 — the chain closes honestly. Next step: reschedule the ETL job to 06:00 AM Tuesday and monitor."

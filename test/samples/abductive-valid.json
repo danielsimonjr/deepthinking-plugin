@@ -25,7 +25,7 @@
   "hypotheses": [
     {
       "id": "h1",
-      "explanation": "A weekly scheduled job (e.g., ETL aggregation or data warehouse sync) runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
+      "explanation": "A weekly scheduled ETL job runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
       "assumptions": [
         "A cron job or scheduler fires at 09:00 on Tuesdays specifically",
         "The job issues heavy read/write queries that compete with dashboard query traffic",
@@ -40,7 +40,7 @@
     },
     {
       "id": "h2",
-      "explanation": "The weekly business-intelligence report generation pipeline is triggered by an automated Monday-night process and materializes results at Tuesday 9 AM, causing a write-heavy lock contention on the reports table",
+      "explanation": "The weekly BI report pipeline materializes results at Tuesday 9 AM, causing write-heavy lock contention on the reports table",
       "assumptions": [
         "BI report materialization writes to the same reports table the dashboard reads from",
         "Table-level or row-level locks are held during materialization",
@@ -55,7 +55,7 @@
     },
     {
       "id": "h3",
-      "explanation": "Application cache is flushed every Monday night as part of a weekly maintenance window, causing a cache cold-start stampede on Tuesday morning when the first wave of users hits the dashboard simultaneously",
+      "explanation": "Application cache is flushed every Monday night, causing a cache cold-start stampede on Tuesday morning when users hit the dashboard simultaneously",
       "assumptions": [
         "The dashboard relies on a cache layer that is cleared on Monday nights",
         "User traffic surges at 9 AM Tuesday (start of business week)",
@@ -63,10 +63,9 @@
       ],
       "predictions": [
         "Cache hit-rate metrics show near-zero Tuesday 9–9:30 AM, recovering by 9:45 AM",
-        "The 503 window would widen if user traffic grew or cache warm-up took longer",
         "Pre-warming the cache before 9 AM Tuesday would reduce or eliminate the errors"
       ],
-      "score": 0.54
+      "score": 0.34
     }
   ],
   "evaluationCriteria": {
@@ -97,7 +96,7 @@
   ],
   "bestExplanation": {
     "id": "h1",
-    "explanation": "A weekly scheduled job (e.g., ETL aggregation or data warehouse sync) runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
+    "explanation": "A weekly scheduled ETL job runs at 9 AM every Tuesday and saturates the database, crowding out dashboard queries",
     "assumptions": [
       "A cron job or scheduler fires at 09:00 on Tuesdays specifically",
       "The job issues heavy read/write queries that compete with dashboard query traffic",
@@ -109,5 +108,34 @@
       "Database slow-query logs show the same tables used by both the job and the dashboard"
     ],
     "score": 0.82
-  }
+  },
+  "abductionSteps": [
+    {
+      "stepNumber": 1,
+      "stepSummary": "Triggered by the Tuesday-only 503 window (o1) and the narrow temporal pattern (o2). Reasoned backward from the observed pattern to enumerate the plausible root-cause classes: compute contention (ETL saturation), lock contention (BI materialization), and cold-start (cache flush).",
+      "abductionMethod": "retroduction",
+      "triggerObservation": "o1",
+      "hypothesesGenerated": ["h1", "h2", "h3"],
+      "hypothesesEliminated": [],
+      "stepsUsed": []
+    },
+    {
+      "stepNumber": 2,
+      "stepSummary": "Checked cache monitoring dashboards for the predicted cold-start signature on a Tuesday morning. Hit rates were normal (>90%) — the prediction that h3 relies on is falsified, so h3 is ruled out as the primary cause.",
+      "abductionMethod": "hypothetico-deductive",
+      "triggerObservation": null,
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": ["h3"],
+      "stepsUsed": [1]
+    },
+    {
+      "stepNumber": 3,
+      "stepSummary": "With h3 eliminated, compared h1 (ETL job) and h2 (BI lock contention). Both are supported by direct log evidence, but h1's log entry aligns with the exact 09:00:02 Tuesday start and the database CPU spike timing (o4) while h2's lock-wait signature would produce a different metric profile. h1 is the best explanation — commit.",
+      "abductionMethod": "ibe",
+      "triggerObservation": "o4",
+      "hypothesesGenerated": [],
+      "hypothesesEliminated": [],
+      "stepsUsed": [1, 2]
+    }
+  ]
 }
