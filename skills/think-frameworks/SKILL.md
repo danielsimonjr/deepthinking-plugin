@@ -135,11 +135,120 @@ See `reference/output-formats/fishbone.md` for the authoritative schema, worked 
 
 ---
 
-## Choosing Among These Four
+## PESTLE
+
+PESTLE scans the **external macro-environment** across six categories — Political, Economic, Social, Technological, Legal, Environmental — that a SWOT's "external" quadrants only gesture at broadly.
+
+### When to Use
+
+- Assessing macro-level external conditions before a market entry, expansion, or major strategic bet
+- The question is bigger than "opportunities/threats" — it needs a structured breakdown of *which kind* of external factor is in play (regulatory vs. economic vs. social, etc.)
+- Environmental scanning as an input to a later `swot` or `decisionmatrix` analysis
+
+**Do not use PESTLE** when the assessment is really about internal capability alongside external factors (use `swot`, which crosses both) or when only one or two external categories genuinely matter (a plain list may suffice; PESTLE's value is forcing coverage of all six).
+
+### Required Fields
+
+`mode, political, economic, social, technological, legal, environmental` — all six category arrays are required.
+
+### Prose Invariants
+
+- Each of the six lanes must be populated — a lane that is genuinely inapplicable should contain `"none identified"`, never be silently thin.
+- Every factor must be external to the subject — internal capabilities and gaps belong in `swot`, not here.
+- `keyFactors` (optional), if present, synthesizes across lanes (a factor commonly spans more than one category, e.g., a regulation that is both Legal and Technological) and should end with something actionable per the category's Output Quality Rules.
+
+See `reference/output-formats/pestle.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Force Field Analysis
+
+Force Field Analysis weighs **driving forces** for a proposed change against **restraining forces** resisting it, each individually scored by strength, to assess change readiness.
+
+### When to Use
+
+- Assessing whether a proposed change (process, policy, technical migration) is likely to succeed given the forces currently in play
+- Deciding where to focus effort to unblock a stalled initiative — strengthen a driving force, or weaken a restraining one
+- Any "why isn't this change happening yet, and what would it take" question
+
+**Do not use Force Field Analysis** for root-cause investigation (use `fivewhys`/`fishbone`) or for a general strategic assessment with no single named change (use `swot`).
+
+### Required Fields
+
+`mode, change, drivingForces, restrainingForces` — `drivingForces`/`restrainingForces` are arrays of `{force, strength}` objects, `strength` an integer 1-5.
+
+### Prose Invariants
+
+- Every `strength` rating must be justified by its `force` text — a 5 should read as obviously more consequential than a 1.
+- `recommendation` (optional but encouraged) must target the *specific* highest-strength restraining force(s) to address, or driving force(s) to reinforce — not a vague call to "manage change better," per the category's "end with an action" rule.
+- Do not double-count a single underlying issue as both a driving and a restraining force in disguised form.
+
+See `reference/output-formats/forcefield.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Decision Matrix
+
+Decision Matrix compares **multiple options** against **multiple weighted criteria** to produce an auditable, scored recommendation — this is this category's dedicated tool for "which option should we pick," as distinct from SWOT's "should we pursue this" or PESTLE's "what's the environment."
+
+### When to Use
+
+- Choosing among 2+ concrete options where more than one dimension of comparison matters (cost, risk, effort, time, etc.)
+- The decision needs to be auditable/defensible — someone should be able to check the math, not just trust a gut-feel ranking
+- A shortlist has already been produced (by any other framework or by direct enumeration) and now needs scoring
+
+**Do not use Decision Matrix** for open-ended option generation (a matrix needs the options already named) or when there is really only one criterion that matters (a simple ranking suffices; the matrix's value is weighting multiple criteria against each other).
+
+### Required Fields
+
+`mode, options, criteria, scores, recommendation` — `options` needs **≥2 entries**, `criteria` needs **≥2 entries** (both `minItems: 2`); `criteria` is an array of `{name, weight}`; `scores` is an array of `{option, perCriterion, total}`.
+
+### Prose Invariants
+
+- **≥2 options and ≥2 criteria** — schema-enforced, restated here because it is the mode's defining shape.
+- **Show weights × scores.** Per this category's Output Quality Rule #2, `total` must be shown as the derived weighted sum (`perCriterion[i] × criteria[i].weight`, summed), not asserted as a bare number — the recommendation must include this arithmetic so it can be checked.
+- `perCriterion` arrays must match `criteria`'s length and order for every option — a silent misalignment corrupts the math even though the schema can't detect it.
+
+See `reference/output-formats/decisionmatrix.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Pareto (80/20)
+
+Pareto analysis ranks contributors by value and identifies the **"vital few"** responsible for the bulk of the total, using a cumulative-percentage cutoff — this category's dedicated prioritization tool, distinct from Decision Matrix's option-comparison focus.
+
+### When to Use
+
+- Prioritizing which of many contributors (causes, categories, customers, bugs) to address first, when effort is limited
+- The question is "which small subset drives most of the impact," not "which single option is best" (that's `decisionmatrix`) or "why did this happen" (that's `fivewhys`/`fishbone`)
+- Following up a `fishbone` cause enumeration by ranking which categories/causes actually carry the most volume
+
+**Do not use Pareto** when there is no meaningful value/volume to rank by (it needs a numeric `value` per item) or when the question is about comparing a small fixed set of options on multiple criteria (use `decisionmatrix`).
+
+### Required Fields
+
+`mode, items, vitalFew` — `items` is an array of `{name, value}` objects; `vitalFew` is a flat array of names copied verbatim from `items[].name`.
+
+### Prose Invariants
+
+- `items` should be sorted descending by `value` — an unsorted list undermines the "vital few vs. trivial many" visualization this mode exists to produce.
+- `vitalFew` entries must match `items[].name` verbatim and correspond to a prefix of the sorted list (the highest-value items), not a scattered subset.
+- If `cumulativePercent` is present, it must be correctly computed from `items[].value` and monotonically non-decreasing, ending at (approximately) 100.
+- `recommendation` (optional but encouraged) should state roughly what share of total value `vitalFew` covers, per the category's "end with an action" rule.
+
+See `reference/output-formats/pareto.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Choosing Among These Eight
 
 - Problem not yet fully scoped? → **5w1h** first, always.
 - Scoped, and the question is strategic position (should we do this, given internal + external factors)? → **swot**.
 - Scoped, and the question is root cause with one expected linear chain? → **fivewhys**.
 - Scoped, and the question is root cause with multiple expected independent categories? → **fishbone**.
+- Scanning the external/macro environment across political/economic/social/technological/legal/environmental factors? → **pestle**.
+- Weighing forces for/against a specific proposed change? → **forcefield**.
+- Comparing 2+ named options against 2+ weighted criteria? → **decisionmatrix**.
+- Prioritizing the vital few contributors from the trivial many, by value? → **pareto**.
 
-These four often chain together in a real investigation: `5w1h` to scope an incident, then `fivewhys` or `fishbone` to find the cause, with `swot` reserved for the separate question of whether/how to respond strategically once the cause is known.
+These eight often chain together in a real investigation: `5w1h` to scope an incident, then `fivewhys`/`fishbone` to find the cause (optionally followed by `pareto` to rank which causes carry the most volume), with `swot`/`pestle` reserved for strategic/environmental assessment and `forcefield`/`decisionmatrix` reserved for deciding how or what to change once the cause and context are known.

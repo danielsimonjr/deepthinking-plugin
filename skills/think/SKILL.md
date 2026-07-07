@@ -67,6 +67,10 @@ This skill routes a reasoning task to the appropriate category skill containing 
 | `swot` | `think-frameworks` | Assessing strategic position via internal + external factors (Strengths/Weaknesses/Opportunities/Threats) |
 | `fivewhys` | `think-frameworks` | Drilling from a symptom to a single root cause via repeated "why" |
 | `fishbone` | `think-frameworks` | Cause analysis needing multiple cause categories (Ishikawa diagram) |
+| `pestle` | `think-frameworks` | Scanning the external/macro environment (Political/Economic/Social/Technological/Legal/Environmental) |
+| `forcefield` | `think-frameworks` | Weighing driving vs. restraining forces for a proposed change |
+| `decisionmatrix` | `think-frameworks` | Comparing options against weighted criteria with a scored recommendation |
+| `pareto` | `think-frameworks` | Prioritizing the vital few contributors from the trivial many (80/20) |
 
 ## Invocation Patterns
 

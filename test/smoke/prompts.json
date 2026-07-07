@@ -36,5 +36,9 @@
   {"mode": "5w1h", "prompt": "Scope this incident before we investigate further: the checkout API started returning HTTP 500 for card payments around 2:32pm UTC today and recovered about 38 minutes later. Who, what, when, where, why, and how?"},
   {"mode": "swot", "prompt": "Assess our strategic position on launching a metered usage-based pricing tier for our B2B SaaS analytics product, given internal capabilities and external market conditions."},
   {"mode": "fivewhys", "prompt": "The nightly ETL job failed to load yesterday's sales data into the reporting warehouse. Drill down with 5 Whys to find the single root cause."},
-  {"mode": "fishbone", "prompt": "Our customer support ticket backlog grew from ~200 to ~950 open tickets over the last quarter. Use a fishbone (Ishikawa) diagram to categorize the contributing causes across multiple categories."}
+  {"mode": "fishbone", "prompt": "Our customer support ticket backlog grew from ~200 to ~950 open tickets over the last quarter. Use a fishbone (Ishikawa) diagram to categorize the contributing causes across multiple categories."},
+  {"mode": "pestle", "prompt": "Scan the macro environment for expanding our grocery delivery service from the US into the EU market. Cover Political, Economic, Social, Technological, Legal, and Environmental factors."},
+  {"mode": "forcefield", "prompt": "Assess the forces for and against moving the engineering org from quarterly releases to weekly continuous deployment. Rate each force's strength 1-5."},
+  {"mode": "decisionmatrix", "prompt": "Compare big-bang cutover, dual-write phased migration, and strangler-fig incremental migration for our database migration, weighted by downtime risk, engineering effort, and time to completion. Show the weighted scoring math."},
+  {"mode": "pareto", "prompt": "Our support ticket categories this quarter: Login/password (420), Billing questions (310), Feature how-to (150), Bug reports (80), Integration failures (45), Data export requests (25), Other misc (20). Apply Pareto (80/20) analysis to find the vital few categories to prioritize."}
 ]

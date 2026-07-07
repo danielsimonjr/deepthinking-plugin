@@ -287,3 +287,27 @@ When a category skill is loaded, the skill can read from this taxonomy to (a) co
 - **Shape:** Spine to effect with category "ribs" (6Ms or domain-specific categories) branching off
 - **Signals:** "fishbone", "Ishikawa", "categorize causes", "6Ms", multiple contributing categories
 - **Anti-signals:** Single linear causal chain (use fivewhys), problem not yet scoped (use 5w1h)
+
+### PESTLE (`pestle`)
+- **Category:** `think-frameworks`
+- **Shape:** Six-lane external macro-environment scan — Political, Economic, Social, Technological, Legal, Environmental
+- **Signals:** "PESTLE", "environmental scan", "macro factors", "regulatory landscape", market-entry/expansion assessment
+- **Anti-signals:** Internal capability assessment alongside external factors (use swot), root-cause analysis (use fivewhys/fishbone)
+
+### Force Field Analysis (`forcefield`)
+- **Category:** `think-frameworks`
+- **Shape:** Driving forces vs. restraining forces, each strength-rated 1-5, opposing a proposed change
+- **Signals:** "force field", "driving/restraining forces", "change readiness", "why isn't this change happening"
+- **Anti-signals:** Root-cause analysis (use fivewhys/fishbone), general strategic assessment with no named change (use swot)
+
+### Decision Matrix (`decisionmatrix`)
+- **Category:** `think-frameworks`
+- **Shape:** Scored grid — options (rows) x weighted criteria (columns), weighted-sum totals
+- **Signals:** "decision matrix", "weighted criteria", "compare options", "which option should we pick"
+- **Anti-signals:** Open-ended option generation (matrix needs options already named), single-criterion ranking (no weighting needed)
+
+### Pareto / 80-20 (`pareto`)
+- **Category:** `think-frameworks`
+- **Shape:** Sorted contributors by value with a cumulative-percentage "vital few" cutoff
+- **Signals:** "Pareto", "80/20", "vital few", "prioritize", ranked contributors by volume/impact
+- **Anti-signals:** No meaningful value/volume to rank by, comparing a small fixed option set on multiple criteria (use decisionmatrix)

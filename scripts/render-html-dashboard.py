@@ -64,6 +64,10 @@ MODE_DISPLAY_NAMES = {
     "swot": "SWOT Analysis",
     "fivewhys": "5 Whys",
     "fishbone": "Fishbone (Ishikawa)",
+    "pestle": "PESTLE Analysis",
+    "forcefield": "Force Field Analysis",
+    "decisionmatrix": "Decision Matrix",
+    "pareto": "Pareto (80/20)",
 }
 
 MODE_SLUG_RE = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")

@@ -71,6 +71,10 @@ Formal "if X then Y, and X, so Y?" shape, or applying rules to a case.
 - Assessing strategic position (internal + external factors)? → **swot**
 - Drilling from a symptom to a single root cause? → **fivewhys** (or **fishbone** for multi-category causes)
 - Cause analysis needing multiple cause CATEGORIES? → **fishbone**
+- Scanning the external/macro environment? → **pestle**
+- Weighing forces for/against a change? → **forcefield**
+- Comparing options against weighted criteria? → **decisionmatrix**
+- Prioritizing the vital few from the trivial many? → **pareto**
 
 ### Fallback
 
