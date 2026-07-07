@@ -289,6 +289,26 @@ Common complexity landmarks: O(1) < O(log n) < O(√n) < O(n) < O(n log n) < O(n
 | Connectivity queries (union-find) | Disjoint-Set Forest | O(α(n)) amortized |
 | Top-K with streaming updates | Min-Heap of size K | O(log K) per update |
 
+### CLRS Reference Extraction
+
+For per-algorithm complexity tables, correctness-proof sketches, and known pitfalls beyond the summary tables above, consult `references/clrs-full-extraction.json` — a structured extraction of CLRS covering every algorithm named in the categories table (time/space complexity, prerequisites, and common failure modes per algorithm). Use it to ground `timeComplexity`/`spaceComplexity` fields and the `keyInsight` field with CLRS-accurate detail rather than recalling complexity bounds from memory.
+
+### Evolutionary Optimization (Shinka) — Guidance, Not a `/think` Mode
+
+This is **guidance for the agent, not a schema'd `/think algorithmic` output**. It does not produce a JSON thought and is not validated against `reference/output-formats/algorithmic.md` — it describes a semi-autonomous workflow that shells out to external `shinka-*` CLI tools (ShinkaEvolve) to evolve a working code implementation once an algorithm has already been reasoned about.
+
+**Trigger:** the user says "optimize this function," "make this faster," "find a better algorithm for this," or asks "can we do better?" after an algorithm is already implemented. Do not trigger for simple bug fixes, style/formatting, or when the user explicitly wants a manual rewrite. Requires ShinkaEvolve installed (`pip install shinka-evolve`); prompt the user to install it if missing.
+
+**Workflow (analyze → scaffold → evolve → inspect → deliver):**
+
+1. **Analyze** — Classify the algorithmic core (sorting, searching, graph, DP, etc.), current time/space complexity, the hot path, and correctness invariants that must be preserved.
+2. **Scaffold** — Auto-generate a `./shinka_task/` sidecar directory: `initial.py` (current implementation with `EVOLVE-BLOCK` markers tight around only the algorithmic core, preserving the function signature/I-O contract), `evaluate.py` (correctness gate + performance score, e.g. 70% speed / 30% correctness coverage), and diverse test inputs (best/worst/average case, edge cases, domain-specific stress tests).
+3. **Evolve** — Run `shinka-run`, first batch `--num_generations 20 --set db.num_islands=3`, with a `task_sys_msg` naming the algorithm class, current complexity, and optimization target. Use multiple islands for diverse pressure (pure speed, algorithmic novelty, worst-case robustness) so the run doesn't converge on one local optimum.
+4. **Inspect** — After each batch, use `shinka-inspect` to review the top 3 variants with before/after benchmarks; explain what changed (better algorithm, constant-factor win, or hybrid approach); ask the user to continue evolving or adopt a winner.
+5. **Deliver** — On selection, replace the original code, document what changed and why as a code comment, and report original vs. new complexity plus the benchmark improvement.
+
+Full scoring guidelines by algorithm class, the island-strategy rationale, and scaffold file templates are in `references/shinka-evolution.md`.
+
 ### Output Format
 
 See `reference/output-formats/algorithmic.md` for the authoritative JSON schema.
