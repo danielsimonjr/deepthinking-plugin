@@ -33,3 +33,6 @@ dist/
 *.pem
 *.key
 secrets/
+
+# SDD scratch/ledger
+.superpowers/
