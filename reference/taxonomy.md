@@ -6,7 +6,7 @@ This file is the canonical reference for which mode applies to which problem sha
 
 When a category skill is loaded, the skill can read from this taxonomy to (a) confirm the problem fits its mode, and (b) recommend switching to a different mode if it does not fit.
 
-## v0.2.0 Modes (all 34 available)
+## v0.2.0 Modes (all 38 available)
 
 ---
 
@@ -259,3 +259,31 @@ When a category skill is loaded, the skill can read from this taxonomy to (a) co
 - **Shape:** Probability distributions, random processes, Monte Carlo analysis
 - **Signals:** "distribution", "random variable", "Monte Carlo", "expected value", "variance", stochastic process
 - **Anti-signals:** Single belief update (use bayesian), deterministic optimization (use optimization)
+
+---
+
+### Framework Modes (`think-frameworks`)
+
+### 5W1H (`5w1h`)
+- **Category:** `think-frameworks`
+- **Shape:** Problem scoped across Who/What/When/Where/Why/How
+- **Signals:** "who/what/when/where/why/how", "define the problem", "5W1H", "scope this incident"
+- **Anti-signals:** Already-scoped root-cause drilling (use fivewhys/fishbone), strategic assessment (use swot)
+
+### SWOT (`swot`)
+- **Category:** `think-frameworks`
+- **Shape:** 2x2 grid — Strengths/Weaknesses (internal) x Opportunities/Threats (external)
+- **Signals:** "SWOT", "strengths/weaknesses", "strategic position", "should we pursue this"
+- **Anti-signals:** Root-cause analysis (use fivewhys/fishbone), problem scoping with no strategic dimension (use 5w1h)
+
+### 5 Whys (`fivewhys`)
+- **Category:** `think-frameworks`
+- **Shape:** Linear chain: problem → why1 → why2 → ... → root cause
+- **Signals:** "5 whys", "root cause", "why did this happen", single expected causal chain
+- **Anti-signals:** Multiple independent cause categories (use fishbone), strategic assessment (use swot)
+
+### Fishbone / Ishikawa (`fishbone`)
+- **Category:** `think-frameworks`
+- **Shape:** Spine to effect with category "ribs" (6Ms or domain-specific categories) branching off
+- **Signals:** "fishbone", "Ishikawa", "categorize causes", "6Ms", multiple contributing categories
+- **Anti-signals:** Single linear causal chain (use fivewhys), problem not yet scoped (use 5w1h)

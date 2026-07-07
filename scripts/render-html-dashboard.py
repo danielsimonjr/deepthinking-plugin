@@ -60,6 +60,10 @@ MODE_DISPLAY_NAMES = {
     "recursive": "Recursive Reasoning",
     "modal": "Modal Reasoning",
     "stochastic": "Stochastic Reasoning",
+    "5w1h": "5W1H",
+    "swot": "SWOT Analysis",
+    "fivewhys": "5 Whys",
+    "fishbone": "Fishbone (Ishikawa)",
 }
 
 MODE_SLUG_RE = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")

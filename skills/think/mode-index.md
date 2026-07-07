@@ -66,6 +66,12 @@ Formal "if X then Y, and X, so Y?" shape, or applying rules to a case.
 - Shannon-style information-theoretic decomposition → **shannon**
 - Multi-mode composition → **hybrid**
 
+### 13. Does the problem call for a named analytical framework?
+- Need to fully scope/define a problem before analysis? → **5w1h**
+- Assessing strategic position (internal + external factors)? → **swot**
+- Drilling from a symptom to a single root cause? → **fivewhys** (or **fishbone** for multi-category causes)
+- Cause analysis needing multiple cause CATEGORIES? → **fishbone**
+
 ### Fallback
 
 If none of the above clearly fit OR the prompt references observations that aren't actually in the prompt → **sequential** with a data-gathering thought as step 1 (and possibly a mode handoff in a later thought once data is known).

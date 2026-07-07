@@ -1,5 +1,5 @@
 ---
-description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is any of the 34 available modes or omitted for auto-recommend."
+description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is any of the 38 available modes or omitted for auto-recommend."
 argument-hint: "[mode] <problem>"
 ---
 
@@ -11,7 +11,7 @@ $ARGUMENTS
 
 ## What to do
 
-Parse the arguments above. The first word may be one of the 34 available modes:
+Parse the arguments above. The first word may be one of the 38 available modes:
 
 **think-standard**
 - **`sequential`** — Iterative step-by-step reasoning. Breaking down a task into ordered thoughts with revision support.
@@ -71,6 +71,12 @@ Parse the arguments above. The first word may be one of the 34 available modes:
 - **`modal`** — Possibility/necessity reasoning (alethic, epistemic, deontic modalities).
 - **`stochastic`** — Probability distributions, random processes, Monte Carlo analysis.
 
+**think-frameworks**
+- **`5w1h`** — Fully scoping/defining a problem across Who/What/When/Where/Why/How before analysis.
+- **`swot`** — Assessing strategic position via internal + external factors (Strengths/Weaknesses/Opportunities/Threats).
+- **`fivewhys`** — Drilling from a symptom to a single root cause via repeated "why" (or `fishbone` for multi-category causes).
+- **`fishbone`** — Cause analysis needing multiple cause categories (Ishikawa diagram).
+
 If the first word is a recognized mode name, apply that method. If the first word is NOT a mode name (or no mode was given), treat the entire `$ARGUMENTS` as the problem and auto-recommend a mode.
 
 ## Auto-Recommendation
@@ -93,6 +99,7 @@ Load the relevant category skill for background on the method:
 - **engineering, algorithmic** → read `skills/think-engineering/SKILL.md`
 - **synthesis, argumentation, critique, analysis** → read `skills/think-academic/SKILL.md`
 - **recursive, modal, stochastic** → read `skills/think-advanced/SKILL.md`
+- **5w1h, swot, fivewhys, fishbone** → read `skills/think-frameworks/SKILL.md`
 
 Then read `reference/output-formats/<mode>.md` for the authoritative JSON schema the output must match.
 
@@ -163,3 +170,7 @@ The three deploy failures all occurred at the same phase with identical symptoms
 | recursive | `reference/output-formats/recursive.md` |
 | modal | `reference/output-formats/modal.md` |
 | stochastic | `reference/output-formats/stochastic.md` |
+| 5w1h | `reference/output-formats/5w1h.md` |
+| swot | `reference/output-formats/swot.md` |
+| fivewhys | `reference/output-formats/fivewhys.md` |
+| fishbone | `reference/output-formats/fishbone.md` |

@@ -1,6 +1,6 @@
 ---
 name: think
-description: Route a reasoning task to the appropriate thinking mode. Use when the user invokes `/think <mode?> "<problem>"` or asks for structured reasoning, critical analysis, Bayesian inference, causal analysis, inductive/deductive reasoning, hypothesis formation, or any form of disciplined thinking. Supports explicit mode selection (e.g., `/think bayesian ...`) and auto-recommendation (`/think ...`).
+description: Route a reasoning task to the appropriate thinking mode. Use when the user invokes `/think <mode?> "<problem>"` or asks for structured reasoning, critical analysis, Bayesian inference, causal analysis, inductive/deductive reasoning, hypothesis formation, analytical frameworks (5W1H, SWOT, 5 Whys, Fishbone), or any form of disciplined thinking. Supports explicit mode selection (e.g., `/think bayesian ...`) and auto-recommendation (`/think ...`).
 argument-hint: "[mode] <problem>"
 ---
 
@@ -14,7 +14,7 @@ The user invoked this skill with the following arguments:
 $ARGUMENTS
 ```
 
-Parse the arguments above. The first word may be a mode name (any of the 34 recognized modes listed below). Everything else is the problem statement. If the first word is NOT one of the recognized modes, treat the entire argument string as a problem statement and auto-recommend a mode per the decision tree in `mode-index.md`.
+Parse the arguments above. The first word may be a mode name (any of the 38 recognized modes listed below). Everything else is the problem statement. If the first word is NOT one of the recognized modes, treat the entire argument string as a problem statement and auto-recommend a mode per the decision tree in `mode-index.md`.
 
 ---
 
@@ -63,6 +63,10 @@ This skill routes a reasoning task to the appropriate category skill containing 
 | `recursive` | `think-advanced` | Self-referential problem decomposition (base case + recursive case + halting) |
 | `modal` | `think-advanced` | Possibility/necessity reasoning (alethic, epistemic, deontic modalities) |
 | `stochastic` | `think-advanced` | Probability distributions, random processes, Monte Carlo analysis |
+| `5w1h` | `think-frameworks` | Fully scoping/defining a problem across Who/What/When/Where/Why/How before analysis |
+| `swot` | `think-frameworks` | Assessing strategic position via internal + external factors (Strengths/Weaknesses/Opportunities/Threats) |
+| `fivewhys` | `think-frameworks` | Drilling from a symptom to a single root cause via repeated "why" |
+| `fishbone` | `think-frameworks` | Cause analysis needing multiple cause categories (Ishikawa diagram) |
 
 ## Invocation Patterns
 
@@ -112,4 +116,4 @@ For auto-recommendation, consult `skills/think/mode-index.md`.
 
 ## Output-Format References
 
-For the JSON schema and verification checklist for each mode, see `reference/output-formats/<mode>.md` where `<mode>` is any of the 34 mode slugs listed in the table above.
+For the JSON schema and verification checklist for each mode, see `reference/output-formats/<mode>.md` where `<mode>` is any of the 38 mode slugs listed in the table above.

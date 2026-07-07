@@ -32,5 +32,9 @@
   {"mode": "analysis", "prompt": "Analyze the failure mode of our authentication service. Use a layered approach: surface symptoms, structural issues, patterns across incidents, and synthesized insights."},
   {"mode": "recursive", "prompt": "Design a recursive solution for deeply nested config validation where each nested config follows the same rules as the parent. Specify base case, recursive case, and halting condition."},
   {"mode": "modal", "prompt": "In our RBAC system: in which worlds MUST Alice have admin access (necessity), and in which worlds COULD she have it (possibility)? Use deontic modality."},
-  {"mode": "stochastic", "prompt": "Model the distribution of queue wait times for our ticket system using an M/M/1 queue. Arrival rate 10/hr, service rate 12/hr. Compute expected wait."}
+  {"mode": "stochastic", "prompt": "Model the distribution of queue wait times for our ticket system using an M/M/1 queue. Arrival rate 10/hr, service rate 12/hr. Compute expected wait."},
+  {"mode": "5w1h", "prompt": "Scope this incident before we investigate further: the checkout API started returning HTTP 500 for card payments around 2:32pm UTC today and recovered about 38 minutes later. Who, what, when, where, why, and how?"},
+  {"mode": "swot", "prompt": "Assess our strategic position on launching a metered usage-based pricing tier for our B2B SaaS analytics product, given internal capabilities and external market conditions."},
+  {"mode": "fivewhys", "prompt": "The nightly ETL job failed to load yesterday's sales data into the reporting warehouse. Drill down with 5 Whys to find the single root cause."},
+  {"mode": "fishbone", "prompt": "Our customer support ticket backlog grew from ~200 to ~950 open tickets over the last quarter. Use a fishbone (Ishikawa) diagram to categorize the contributing causes across multiple categories."}
 ]
