@@ -68,6 +68,10 @@ MODE_DISPLAY_NAMES = {
     "forcefield": "Force Field Analysis",
     "decisionmatrix": "Decision Matrix",
     "pareto": "Pareto (80/20)",
+    "stakeholder": "Stakeholder Analysis",
+    "costbenefit": "Cost-Benefit Analysis",
+    "riskassessment": "Risk Assessment",
+    "gapanalysis": "Gap Analysis",
 }
 
 MODE_SLUG_RE = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")

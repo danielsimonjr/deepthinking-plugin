@@ -1,5 +1,5 @@
 ---
-description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is any of the 42 available modes or omitted for auto-recommend."
+description: "Apply a structured reasoning method to a problem. Usage: /think [mode] \"<problem>\" where mode is any of the 46 available modes or omitted for auto-recommend."
 argument-hint: "[mode] <problem>"
 ---
 
@@ -11,7 +11,7 @@ $ARGUMENTS
 
 ## What to do
 
-Parse the arguments above. The first word may be one of the 42 available modes:
+Parse the arguments above. The first word may be one of the 46 available modes:
 
 **think-standard**
 - **`sequential`** — Iterative step-by-step reasoning. Breaking down a task into ordered thoughts with revision support.
@@ -80,6 +80,10 @@ Parse the arguments above. The first word may be one of the 42 available modes:
 - **`forcefield`** — Weighing driving vs. restraining forces for a proposed change, each strength-rated.
 - **`decisionmatrix`** — Comparing 2+ options against 2+ weighted criteria with a scored recommendation.
 - **`pareto`** — Prioritizing the vital few contributors from the trivial many (80/20, cumulative percentage).
+- **`stakeholder`** — Mapping stakeholders by power and interest, with a per-stakeholder engagement strategy.
+- **`costbenefit`** — Weighing quantified costs against quantified benefits for a single option, with ROI/payback.
+- **`riskassessment`** — Rating risks by probability x impact and prioritizing mitigation by score.
+- **`gapanalysis`** — Mapping current state vs. desired state across dimensions, with a closing action plan.
 
 If the first word is a recognized mode name, apply that method. If the first word is NOT a mode name (or no mode was given), treat the entire `$ARGUMENTS` as the problem and auto-recommend a mode.
 
@@ -103,7 +107,7 @@ Load the relevant category skill for background on the method:
 - **engineering, algorithmic** → read `skills/think-engineering/SKILL.md`
 - **synthesis, argumentation, critique, analysis** → read `skills/think-academic/SKILL.md`
 - **recursive, modal, stochastic** → read `skills/think-advanced/SKILL.md`
-- **5w1h, swot, fivewhys, fishbone, pestle, forcefield, decisionmatrix, pareto** → read `skills/think-frameworks/SKILL.md`
+- **5w1h, swot, fivewhys, fishbone, pestle, forcefield, decisionmatrix, pareto, stakeholder, costbenefit, riskassessment, gapanalysis** → read `skills/think-frameworks/SKILL.md`
 
 Then read `reference/output-formats/<mode>.md` for the authoritative JSON schema the output must match.
 
@@ -182,3 +186,7 @@ The three deploy failures all occurred at the same phase with identical symptoms
 | forcefield | `reference/output-formats/forcefield.md` |
 | decisionmatrix | `reference/output-formats/decisionmatrix.md` |
 | pareto | `reference/output-formats/pareto.md` |
+| stakeholder | `reference/output-formats/stakeholder.md` |
+| costbenefit | `reference/output-formats/costbenefit.md` |
+| riskassessment | `reference/output-formats/riskassessment.md` |
+| gapanalysis | `reference/output-formats/gapanalysis.md` |

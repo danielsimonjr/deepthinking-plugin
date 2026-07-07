@@ -71,6 +71,10 @@ This skill routes a reasoning task to the appropriate category skill containing 
 | `forcefield` | `think-frameworks` | Weighing driving vs. restraining forces for a proposed change |
 | `decisionmatrix` | `think-frameworks` | Comparing options against weighted criteria with a scored recommendation |
 | `pareto` | `think-frameworks` | Prioritizing the vital few contributors from the trivial many (80/20) |
+| `stakeholder` | `think-frameworks` | Mapping stakeholders by power and interest to plan engagement |
+| `costbenefit` | `think-frameworks` | Weighing quantified costs against quantified benefits for one option |
+| `riskassessment` | `think-frameworks` | Rating risks by probability x impact to prioritize mitigation |
+| `gapanalysis` | `think-frameworks` | Mapping current state vs. desired state with a closing action plan |
 
 ## Invocation Patterns
 

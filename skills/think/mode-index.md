@@ -75,6 +75,10 @@ Formal "if X then Y, and X, so Y?" shape, or applying rules to a case.
 - Weighing forces for/against a change? → **forcefield**
 - Comparing options against weighted criteria? → **decisionmatrix**
 - Prioritizing the vital few from the trivial many? → **pareto**
+- Mapping stakeholders by power and interest? → **stakeholder**
+- Weighing quantified costs against benefits? → **costbenefit**
+- Rating risks by probability x impact? → **riskassessment**
+- Mapping current vs. desired state with an action plan? → **gapanalysis**
 
 ### Fallback
 

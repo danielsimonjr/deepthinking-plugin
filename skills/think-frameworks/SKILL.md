@@ -12,7 +12,7 @@ argument-hint: "[framework] <problem>"
 $ARGUMENTS
 ```
 
-Parse these arguments. The first word should be one of this category's framework modes (`5w1h`, `swot`, `fivewhys`, `fishbone`, and later `pestle`, `forcefield`, `decisionmatrix`, `pareto`, `stakeholder`, `costbenefit`, `riskassessment`, `gapanalysis`). The rest is the problem to reason about. If invoked via the `think` router, `$ARGUMENTS` is the same string the user originally typed after `/think`.
+Parse these arguments. The first word should be one of this category's framework modes (`5w1h`, `swot`, `fivewhys`, `fishbone`, `pestle`, `forcefield`, `decisionmatrix`, `pareto`, `stakeholder`, `costbenefit`, `riskassessment`, `gapanalysis`). The rest is the problem to reason about. If invoked via the `think` router, `$ARGUMENTS` is the same string the user originally typed after `/think`.
 
 This category skill teaches structured **analytical frameworks** — well-established business, engineering, and quality-management templates for scoping problems, assessing strategic position, finding root causes, and (in later modes) prioritizing and deciding. Unlike the free-form reasoning modes in other categories, each framework here has a fixed, named structure (a grid, a chain, a spine) that the output must fill in completely.
 
@@ -240,7 +240,111 @@ See `reference/output-formats/pareto.md` for the authoritative schema, worked ex
 
 ---
 
-## Choosing Among These Eight
+## Stakeholder Analysis
+
+Stakeholder Analysis maps everyone affected by or influencing a decision onto a **power/interest 2x2 grid**, producing a per-stakeholder engagement strategy — this category's dedicated tool for "who do we need to manage, and how," as distinct from SWOT's "should we do this" or Decision Matrix's "which option should we pick."
+
+### When to Use
+
+- Planning a change (new system, reorg, policy) that affects multiple people or groups with different levels of influence and interest
+- Deciding who needs frequent hands-on engagement versus who just needs to be kept informed or monitored
+- Any "who do we need to bring along" question before or during a rollout
+
+**Do not use Stakeholder Analysis** for comparing options (use `decisionmatrix`) or for a general strategic assessment with no named stakeholders (use `swot`).
+
+### Required Fields
+
+`mode, stakeholders` — `stakeholders` is an array of `{name, power, interest, quadrant, strategy}` objects, `minItems: 1`.
+
+### Prose Invariants
+
+- `quadrant` must be consistent with `power`/`interest`: high power + high interest → "Manage Closely"; high power + low interest → "Keep Satisfied"; low power + high interest → "Keep Informed"; low power + low interest → "Monitor" — a quadrant that contradicts its own power/interest values is an internal inconsistency.
+- `strategy` must be specific to the stakeholder's quadrant, not a generic line copy-pasted across every stakeholder.
+- `recommendation` (optional but encouraged) should synthesize across quadrants — who to prioritize, who to deprioritize — per the category's "end with an action" rule.
+
+See `reference/output-formats/stakeholder.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Cost-Benefit Analysis
+
+Cost-Benefit Analysis weighs **quantified costs against quantified benefits** for a single option, producing an auditable go/no-go recommendation — distinct from Decision Matrix, which compares multiple options against multiple weighted criteria rather than evaluating one option's raw economics in depth.
+
+### When to Use
+
+- Justifying (or rejecting) a single proposed investment, migration, or initiative in dollar terms
+- The decision needs an ROI/payback framing, not just a qualitative "is this a good idea"
+- A specific option has already been chosen (by `decisionmatrix` or otherwise) and now needs its own financial case made
+
+**Do not use Cost-Benefit Analysis** for comparing multiple options against each other (use `decisionmatrix`) or when costs/benefits cannot be meaningfully quantified (use `swot` or `forcefield` instead).
+
+### Required Fields
+
+`mode, option, costs, benefits, recommendation` — `costs`/`benefits` are arrays of `{item, amount}` objects; `npv`/`roi`/`paybackPeriod` are optional (number, string, or `null`).
+
+### Prose Invariants
+
+- **Show totals.** Per this category's Output Quality Rule #2, the `recommendation` must state the sum of `costs[].amount` and the sum of `benefits[].amount` explicitly — a bare go/no-go call without the underlying totals cannot be audited.
+- If `roi` is present, state what period it covers — an ROI percentage without a stated time horizon is ambiguous.
+- `recommendation` must make an explicit go/no-go/conditional call, per the category's "end with an action" rule.
+
+See `reference/output-formats/costbenefit.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Risk Assessment
+
+Risk Assessment rates risks by **probability x impact**, producing a scored, prioritized mitigation plan — this category's dedicated tool for "what could go wrong, and in what order should we address it," distinct from Force Field's forces-for-a-change framing.
+
+### When to Use
+
+- Assessing the risks of a proposed change, migration, or launch before committing to it
+- Prioritizing which risks to mitigate first when time/budget for mitigation is limited
+- Any "what could go wrong, and how bad would it be" question that benefits from a probability x impact score rather than a flat list
+
+**Do not use Risk Assessment** for weighing forces for/against a change in general (use `forcefield`) or for root-causing something that already happened (use `fivewhys`/`fishbone`).
+
+### Required Fields
+
+`mode, risks` — `risks` is an array of `{risk, probability, impact, score, mitigation}` objects, `minItems: 1`; `topRisks` (optional) is a flat array of risk strings.
+
+### Prose Invariants
+
+- **`score` = `probability` x `impact`.** This is the mode's defining invariant — recompute `score` from `probability` and `impact` before emitting; a `score` that doesn't match its own inputs is the single most common error in this mode.
+- `topRisks[]` entries must match `risks[].risk` verbatim and correspond to the highest-`score` entries.
+- `mitigation` must name a specific, actionable step, not a vague "monitor the situation."
+
+See `reference/output-formats/riskassessment.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Gap Analysis
+
+Gap Analysis maps **current state vs. desired state** across named dimensions, each with an explicit delta and closing action, then rolls up into an overall action plan — this category's dedicated tool for "where are we now vs. where do we want to be, and how do we close the distance."
+
+### When to Use
+
+- Assessing organizational, process, or capability maturity against a target state
+- Planning a transformation initiative that needs to be broken into dimension-by-dimension deltas rather than one big undifferentiated change
+- Following up a `swot`/`pestle` assessment by turning identified weaknesses/gaps into a structured current-vs-desired breakdown with actions
+
+**Do not use Gap Analysis** when there is no meaningful "current vs. desired" framing (use `swot` for general strategic assessment) or when the question is about comparing discrete options (use `decisionmatrix`).
+
+### Required Fields
+
+`mode, currentState, desiredState, gaps` — `gaps` is an array of `{dimension, current, desired, gap, action}` objects, `minItems: 1`; `actionPlan` (optional) is a flat array of ordered strings.
+
+### Prose Invariants
+
+- Each `gaps[].current`/`gaps[].desired` must be a specific instantiation of the overall `currentState`/`desiredState` for that dimension, not a restatement of the summary.
+- `gap` must name the actual delta, not just juxtapose current and desired with no synthesis.
+- `action` must be specific and closable; if `actionPlan` is present, it sequences the per-dimension actions into a realistic execution order across dimensions.
+
+See `reference/output-formats/gapanalysis.md` for the authoritative schema, worked example, and verification checklist.
+
+---
+
+## Choosing Among These Twelve
 
 - Problem not yet fully scoped? → **5w1h** first, always.
 - Scoped, and the question is strategic position (should we do this, given internal + external factors)? → **swot**.
@@ -250,5 +354,9 @@ See `reference/output-formats/pareto.md` for the authoritative schema, worked ex
 - Weighing forces for/against a specific proposed change? → **forcefield**.
 - Comparing 2+ named options against 2+ weighted criteria? → **decisionmatrix**.
 - Prioritizing the vital few contributors from the trivial many, by value? → **pareto**.
+- Mapping stakeholders by power and interest to plan engagement? → **stakeholder**.
+- Weighing quantified costs against quantified benefits for one option? → **costbenefit**.
+- Rating risks by probability x impact to prioritize mitigation? → **riskassessment**.
+- Mapping current state vs. desired state with a closing action plan? → **gapanalysis**.
 
-These eight often chain together in a real investigation: `5w1h` to scope an incident, then `fivewhys`/`fishbone` to find the cause (optionally followed by `pareto` to rank which causes carry the most volume), with `swot`/`pestle` reserved for strategic/environmental assessment and `forcefield`/`decisionmatrix` reserved for deciding how or what to change once the cause and context are known.
+These twelve often chain together in a real investigation: `5w1h` to scope an incident, then `fivewhys`/`fishbone` to find the cause (optionally followed by `pareto` to rank which causes carry the most volume), with `swot`/`pestle`/`stakeholder` reserved for strategic/environmental/people assessment, `forcefield`/`decisionmatrix`/`costbenefit`/`riskassessment` reserved for deciding how or what to change once the cause and context are known, and `gapanalysis` for framing the distance between current and target state before any of the above.

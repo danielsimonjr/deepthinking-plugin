@@ -311,3 +311,27 @@ When a category skill is loaded, the skill can read from this taxonomy to (a) co
 - **Shape:** Sorted contributors by value with a cumulative-percentage "vital few" cutoff
 - **Signals:** "Pareto", "80/20", "vital few", "prioritize", ranked contributors by volume/impact
 - **Anti-signals:** No meaningful value/volume to rank by, comparing a small fixed option set on multiple criteria (use decisionmatrix)
+
+### Stakeholder Analysis (`stakeholder`)
+- **Category:** `think-frameworks`
+- **Shape:** Power/interest 2x2 grid — Manage Closely, Keep Satisfied, Keep Informed, Monitor
+- **Signals:** "stakeholder", "power/interest", "manage stakeholders", "who do we need to bring along"
+- **Anti-signals:** Comparing options rather than people (use decisionmatrix), general strategic assessment with no named stakeholders (use swot)
+
+### Cost-Benefit Analysis (`costbenefit`)
+- **Category:** `think-frameworks`
+- **Shape:** Itemized costs vs. itemized benefits for one option, with ROI/NPV/payback
+- **Signals:** "cost-benefit", "ROI", "NPV", "payback", justify a single investment in dollar terms
+- **Anti-signals:** Comparing multiple options against each other (use decisionmatrix), non-quantifiable tradeoffs (use swot/forcefield)
+
+### Risk Assessment (`riskassessment`)
+- **Category:** `think-frameworks`
+- **Shape:** Risks scored by probability x impact, ranked for mitigation priority
+- **Signals:** "risk assessment", "probability x impact", "risk matrix", "what could go wrong"
+- **Anti-signals:** Weighing forces for/against a change in general (use forcefield), root-causing something that already happened (use fivewhys/fishbone)
+
+### Gap Analysis (`gapanalysis`)
+- **Category:** `think-frameworks`
+- **Shape:** Current state vs. desired state across dimensions, each with a delta and closing action, rolling up into an action plan
+- **Signals:** "gap analysis", "current vs desired", "capability gap", maturity assessment against a target state
+- **Anti-signals:** No meaningful current-vs-desired framing (use swot), comparing discrete options (use decisionmatrix)
