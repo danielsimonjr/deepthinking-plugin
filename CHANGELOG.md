@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-07-07
+
+Feature release. Adds a new `think-frameworks` category of 12 analytical-framework reasoning modes, growing the mode set from 34 to 46. Also folds CLRS algorithm-selection extraction and Shinka evolutionary-optimization guidance into the existing `algorithmic` mode, and migrates the cognitive-bias check from the (now-retired) standalone `reasoning-skill` plugin in as a reference, not a mode.
+
+### Added
+
+- **`think-frameworks` category — 12 new analytical-framework modes**, bringing the total mode set from 34 to 46: `5w1h` (Five Ws and How), `swot` (Strengths/Weaknesses/Opportunities/Threats), `fivewhys` (root-cause drill-down), `fishbone` (Ishikawa cause-and-effect), `pestle` (Political/Economic/Social/Technological/Legal/Environmental scan), `forcefield` (Lewin force-field analysis), `decisionmatrix` (weighted-criteria option scoring), `pareto` (80/20 impact prioritization), `stakeholder` (stakeholder power/interest mapping), `costbenefit` (cost-benefit analysis), `riskassessment` (probability x impact risk scoring), `gapanalysis` (current-state vs. desired-state gap mapping). Each mode ships the full 10-artifact set (schema, sample, visual grammar, output-format doc, category skill section, router entry, mode-index entry, taxonomy entry, smoke prompt, dashboard display name) per the mode-set invariant in `CLAUDE.md`.
+- **`skills/think-frameworks/SKILL.md`** — the category skill teaching all 12 framework modes, including reasoning-skill's per-framework deep-dive guidance (when to reach for each framework, how to structure the output, common pitfalls) migrated in from the standalone `reasoning-skill` plugin.
+- **`skills/think-frameworks/references/cognitive-biases/`** — the cognitive-bias reference migrated from the standalone `reasoning-skill` plugin, applied as a pre-commit bias check on the draft output of the decision modes (`decisionmatrix`, `riskassessment`, `costbenefit`, `swot`). Ships as a **reference, not a mode** — it does not emit its own thought or appear in the 46-mode set.
+- **`skills/think-engineering/SKILL.md`** — the `algorithmic` mode enriched with a CLRS full-extraction algorithm-selection reference (`references/clrs-full-extraction.json`) and a Shinka analyze->scaffold->evolve->inspect->deliver evolutionary-optimization workflow (`references/shinka-evolution.md`), triggered by "optimize / make faster / find a better algorithm" language. Guidance layered onto the existing mode; `test/schemas/algorithmic.json` is unchanged and there is no separate `shinka` mode.
+
+### Changed
+
+- **The 34-mode invariant is now the 46-mode invariant.** `CLAUDE.md`, `README.md`, `ARCHITECTURE.md`, `reference/taxonomy.md`, and `docs/SKILL-INVARIANTS.md` all updated to reflect 46 modes across 13 categories (12 original categories + the new `think-frameworks` category). `test/test_artifact_consistency.py` now enforces set-equality across all 46 modes.
+
+### Note
+
+- The standalone `reasoning-skill` and `algorithm-skill` plugins are retired — their content is folded into this plugin's `think-frameworks` category and `algorithmic` mode respectively. Users of the standalone plugins should disable them and run `/reload-plugins` to pick up the merged functionality here.
+
 ## [0.5.4] - 2026-04-14
 
 Schema enrichment release. Third and final of three planned core-triad enrichments: the `abductive` mode gains an optional `abductionSteps[]` field for iterative hypothesis generation, eliminative narrowing, hypothetico-deductive cycles, and other multi-round abduction patterns. Backward-compatible — atomic single-shot abductions continue to validate unchanged. The core reasoning triad (`deductive`, `inductive`, `abductive`) now has symmetric multi-step support.
