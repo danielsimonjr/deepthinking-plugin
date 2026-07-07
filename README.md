@@ -1,10 +1,10 @@
 # deepthinking-plugin
 
-Structured reasoning methods for Claude Code. This plugin teaches Claude 34 reasoning modes (Bayesian inference, causal analysis, game theory, etc.) as native skills. Unlike the original `deepthinking-mcp` TypeScript server, no external runtime is required — Claude learns each method from skill content and produces the structured output directly.
+Structured reasoning methods for Claude Code. This plugin teaches Claude 46 reasoning modes (Bayesian inference, causal analysis, game theory, and a `think-frameworks` category of 12 analytical business/quality frameworks like SWOT, 5 Whys, and Decision Matrix, etc.) as native skills. Unlike the original `deepthinking-mcp` TypeScript server, no external runtime is required — Claude learns each method from skill content and produces the structured output directly.
 
 ## Status
 
-**v0.5.4 — All 34 reasoning modes shipped.** End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 13 output formats supported. The full core reasoning triad — `deductive`, `inductive`, and `abductive` — now supports optional multi-step reasoning chains (`derivationSteps[]`, `inductionSteps[]`, and `abductionSteps[]` respectively). See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.5.4 progression.
+**v0.5.4 — All 46 reasoning modes shipped**, including a new `think-frameworks` category of 12 analytical business/quality frameworks (5W1H, SWOT, 5 Whys, Fishbone, PESTLE, Force Field, Decision Matrix, Pareto, Stakeholder, Cost-Benefit, Risk Assessment, Gap Analysis). End-to-end smoke tested via headless `claude -p` against all modes; interactive HTML dashboard + 13 output formats supported. The full core reasoning triad — `deductive`, `inductive`, and `abductive` — now supports optional multi-step reasoning chains (`derivationSteps[]`, `inductionSteps[]`, and `abductionSteps[]` respectively). See [CHANGELOG.md](CHANGELOG.md) for the v0.1.0 → v0.5.4 progression.
 
 ## Install
 
@@ -42,6 +42,8 @@ See `examples/personal-command-alias/README.md` for details.
     /deepthinking-plugin:think sequential "Break down the steps to migrate this database"
     /deepthinking-plugin:think inductive "Given these three incidents (A, B, C), what pattern do they share?"
     /deepthinking-plugin:think deductive "If all users in admin can edit posts and Alice is in admin, can Alice edit posts?"
+    /deepthinking-plugin:think swot "Should we launch our product in the EU market this year?"
+    /deepthinking-plugin:think decisionmatrix "Compare Postgres, MySQL, and SQLite for our new service's primary datastore"
     /deepthinking-plugin:think "Why did the last three deployments fail?"
 
 ### Short form (requires the optional personal alias installed above)
@@ -49,9 +51,32 @@ See `examples/personal-command-alias/README.md` for details.
     /think sequential "Break down the steps to migrate this database"
     /think inductive "Given these three incidents (A, B, C), what pattern do they share?"
     /think deductive "If all users in admin can edit posts and Alice is in admin, can Alice edit posts?"
+    /think swot "Should we launch our product in the EU market this year?"
+    /think decisionmatrix "Compare Postgres, MySQL, and SQLite for our new service's primary datastore"
     /think "Why did the last three deployments fail?"
 
 Both forms produce the same structured JSON output matching the mode's schema. See `reference/output-formats/` for per-mode schemas and worked examples.
+
+### Reasoning mode categories
+
+The 46 modes are grouped into 13 category skills. Twelve categories carry the original 34 modes (`think-standard`, `think-core`, `think-mathematics`, `think-temporal`, `think-probabilistic`, `think-causal`, `think-strategic`, `think-analytical`, `think-scientific`, `think-engineering`, `think-academic`, `think-advanced`). The newest category, **`think-frameworks`**, adds 12 analytical business/quality-management frameworks:
+
+| Mode | What it's for |
+|---|---|
+| `5w1h` | Fully scope a problem (Who/What/When/Where/Why/How) before analysis |
+| `swot` | Strategic position — Strengths/Weaknesses/Opportunities/Threats |
+| `fivewhys` | Drill from a symptom to a single root cause |
+| `fishbone` | Root cause across multiple categories (Ishikawa diagram) |
+| `pestle` | Scan the external/macro environment (Political/Economic/Social/Technological/Legal/Environmental) |
+| `forcefield` | Weigh driving vs. restraining forces for a proposed change |
+| `decisionmatrix` | Compare options against weighted criteria with a scored recommendation |
+| `pareto` | Prioritize the vital few contributors from the trivial many (80/20) |
+| `stakeholder` | Map stakeholders by power and interest to plan engagement |
+| `costbenefit` | Weigh quantified costs against quantified benefits for one option |
+| `riskassessment` | Rate risks by probability × impact to prioritize mitigation |
+| `gapanalysis` | Map current state vs. desired state with a closing action plan |
+
+See `skills/think/SKILL.md` for the full 46-mode router table and `skills/think-frameworks/SKILL.md` for the frameworks category's teaching content.
 
 ### Rendering diagrams (v0.3.0+)
 
@@ -114,17 +139,19 @@ The dashboard is generated by `scripts/render-html-dashboard.py` which substitut
 ### Fast automated tests
 
     python test/test_plugin_json.py           # plugin.json validity
-    python test/test_skill_frontmatter.py     # all 13 SKILL.md have valid frontmatter
-    python test/harness.py                    # 35 JSON schema validations
-    python test/visual/validate-mermaid.py    # 34 per-mode Mermaid grammars parse
-    python test/visual/validate-dot.py        # 34 per-mode DOT grammars parse
+    python test/test_skill_frontmatter.py     # all 14 SKILL.md have valid frontmatter
+    python test/test_artifact_consistency.py  # 46-mode set-equality across dirs
+    python test/test_format_grammars.py       # per-format grammar structure
+    python test/harness.py                    # 52 JSON schema validations (46 valid + 6 invalid)
+    python test/visual/validate-mermaid.py    # 46 per-mode Mermaid grammars parse
+    python test/visual/validate-dot.py        # 46 per-mode DOT grammars parse
     python test/visual/test-dashboard.py      # HTML dashboard integration
 
 ### End-to-end smoke tests (v0.4.0+)
 
     python test/smoke/run-all-modes.py
 
-Runs headless `claude -p` for each of the 34 modes with a realistic test prompt, captures the JSON output, and validates it against the mode's schema. Takes ~30-60 minutes for all 34 (~90-150 seconds per mode). Environment variables:
+Runs headless `claude -p` for each of the 46 modes with a realistic test prompt, captures the JSON output, and validates it against the mode's schema. Takes ~30-60 minutes for all 46 (~90-150 seconds per mode). Environment variables:
 
 - `SMOKE_TIMEOUT=120` — seconds per mode (default 180)
 - `SMOKE_MODE=bayesian` — run only a single mode (useful for debugging)

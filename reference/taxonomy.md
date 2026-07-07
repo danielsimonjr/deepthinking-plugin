@@ -326,8 +326,8 @@ When a category skill is loaded, the skill can read from this taxonomy to (a) co
 
 ### Risk Assessment (`riskassessment`)
 - **Category:** `think-frameworks`
-- **Shape:** Risks scored by probability x impact, ranked for mitigation priority
-- **Signals:** "risk assessment", "probability x impact", "risk matrix", "what could go wrong"
+- **Shape:** Risks scored by probability × impact, ranked for mitigation priority
+- **Signals:** "risk assessment", "probability × impact", "risk matrix", "what could go wrong"
 - **Anti-signals:** Weighing forces for/against a change in general (use forcefield), root-causing something that already happened (use fivewhys/fishbone)
 
 ### Gap Analysis (`gapanalysis`)

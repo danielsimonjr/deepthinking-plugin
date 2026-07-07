@@ -14,7 +14,7 @@ The user invoked this skill with the following arguments:
 $ARGUMENTS
 ```
 
-Parse the arguments above. The first word may be a mode name (any of the 38 recognized modes listed below). Everything else is the problem statement. If the first word is NOT one of the recognized modes, treat the entire argument string as a problem statement and auto-recommend a mode per the decision tree in `mode-index.md`.
+Parse the arguments above. The first word may be a mode name (any of the 46 recognized modes listed below). Everything else is the problem statement. If the first word is NOT one of the recognized modes, treat the entire argument string as a problem statement and auto-recommend a mode per the decision tree in `mode-index.md`.
 
 ---
 
@@ -73,7 +73,7 @@ This skill routes a reasoning task to the appropriate category skill containing 
 | `pareto` | `think-frameworks` | Prioritizing the vital few contributors from the trivial many (80/20) |
 | `stakeholder` | `think-frameworks` | Mapping stakeholders by power and interest to plan engagement |
 | `costbenefit` | `think-frameworks` | Weighing quantified costs against quantified benefits for one option |
-| `riskassessment` | `think-frameworks` | Rating risks by probability x impact to prioritize mitigation |
+| `riskassessment` | `think-frameworks` | Rating risks by probability × impact to prioritize mitigation |
 | `gapanalysis` | `think-frameworks` | Mapping current state vs. desired state with a closing action plan |
 
 ## Invocation Patterns
@@ -124,4 +124,4 @@ For auto-recommendation, consult `skills/think/mode-index.md`.
 
 ## Output-Format References
 
-For the JSON schema and verification checklist for each mode, see `reference/output-formats/<mode>.md` where `<mode>` is any of the 38 mode slugs listed in the table above.
+For the JSON schema and verification checklist for each mode, see `reference/output-formats/<mode>.md` where `<mode>` is any of the 46 mode slugs listed in the table above.

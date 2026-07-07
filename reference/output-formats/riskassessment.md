@@ -1,6 +1,6 @@
 # Risk Assessment Thought — Output Format
 
-Rating risks by probability x impact and prioritizing mitigation by score.
+Rating risks by probability × impact and prioritizing mitigation by score.
 
 ## JSON Schema
 
@@ -30,7 +30,7 @@ Rating risks by probability x impact and prioritizing mitigation by score.
 
 ## Prose Invariants (not schema-enforced)
 
-- **`score` = `probability` x `impact`.** When both are numeric, `score` must equal their arithmetic product — this is the mode's defining invariant and the single most common error if not recomputed before emitting. When either is qualitative (e.g., "high"/"medium"/"low"), `score` should still reflect a consistent combination (e.g., mapping to a numeric scale internally) rather than an arbitrary number.
+- **`score` = `probability` × `impact`.** When both are numeric, `score` must equal their arithmetic product — this is the mode's defining invariant and the single most common error if not recomputed before emitting. When either is qualitative (e.g., "high"/"medium"/"low"), `score` should still reflect a consistent combination (e.g., mapping to a numeric scale internally) rather than an arbitrary number.
 - `topRisks[]` entries must match `risks[].risk` verbatim and should be the highest-`score` entries — not an arbitrary subset.
 - `mitigation` must be a specific, actionable step — "monitor the situation" is not a mitigation for a scored risk; name what will actually reduce probability or impact.
 - `recommendation` (optional but encouraged) should state which risks to address first (highest score) and may note which lower-scored risks can be mitigated in parallel, per this category's "end with an action" rule.
@@ -40,13 +40,13 @@ Rating risks by probability x impact and prioritizing mitigation by score.
 Before emitting, verify:
 - `mode` is exactly `"riskassessment"`
 - `risks` has at least 1 entry, each with all five required fields populated
-- Recompute every `score` as `probability x impact` (or the qualitative equivalent) before emitting — a `score` that doesn't match its own `probability`/`impact` values is the single most common error in this mode
+- Recompute every `score` as `probability × impact` (or the qualitative equivalent) before emitting — a `score` that doesn't match its own `probability`/`impact` values is the single most common error in this mode
 - If `topRisks` is present, every entry matches a `risks[].risk` string verbatim and corresponds to a high-`score` entry
 - Every `mitigation` names a specific action, not a vague monitoring statement
 
 ## Worked Example
 
-Input: "Assess the risks of migrating our payment processing to a new gateway vendor. Rate each by probability x impact and give mitigations."
+Input: "Assess the risks of migrating our payment processing to a new gateway vendor. Rate each by probability × impact and give mitigations."
 
 Output:
 
@@ -60,8 +60,8 @@ Output:
     {"risk": "Vendor's SLA does not cover our seasonal peak traffic windows", "probability": 0.3, "impact": 4, "score": 1.2, "mitigation": "Escalate to the vendor account team; keep the old gateway as manual failover for the first peak season."}
   ],
   "topRisks": ["Engineering team is unfamiliar with the new gateway's SDK", "New payment gateway API has undocumented rate limits"],
-  "recommendation": "Address the top two risks by score first (0.6x3=1.8 SDK gap, 0.4x4=1.6 rate limits) before cutover; the lower-scored corruption (0.2x5=1.0) and SLA (0.3x4=1.2) risks can be mitigated in parallel."
+  "recommendation": "Address the top two risks by score first (0.6×3=1.8 SDK gap, 0.4×4=1.6 rate limits) before cutover; the lower-scored corruption (0.2×5=1.0) and SLA (0.3×4=1.2) risks can be mitigated in parallel."
 }
 ```
 
-Every `score` is recomputed from `probability x impact` and the recommendation restates the arithmetic for the top two risks — this is what makes the priority ranking auditable rather than asserted.
+Every `score` is recomputed from `probability × impact` and the recommendation restates the arithmetic for the top two risks — this is what makes the priority ranking auditable rather than asserted.

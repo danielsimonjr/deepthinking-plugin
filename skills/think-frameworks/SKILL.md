@@ -206,6 +206,7 @@ Decision Matrix compares **multiple options** against **multiple weighted criter
 ### Prose Invariants
 
 - **≥2 options and ≥2 criteria** — schema-enforced, restated here because it is the mode's defining shape.
+- **Exactly one `scores` entry per option.** Every option in `options[]` must have exactly one corresponding entry in `scores[]` — no missing option (unscored) and no duplicate (double-scored) option. `scores.length` must equal `options.length`.
 - **Show weights × scores.** Per this category's Output Quality Rule #2, `total` must be shown as the derived weighted sum (`perCriterion[i] × criteria[i].weight`, summed), not asserted as a bare number — the recommendation must include this arithmetic so it can be checked.
 - `perCriterion` arrays must match `criteria`'s length and order for every option — a silent misalignment corrupts the math even though the schema can't detect it.
 
@@ -294,13 +295,13 @@ See `reference/output-formats/costbenefit.md` for the authoritative schema, work
 
 ## Risk Assessment
 
-Risk Assessment rates risks by **probability x impact**, producing a scored, prioritized mitigation plan — this category's dedicated tool for "what could go wrong, and in what order should we address it," distinct from Force Field's forces-for-a-change framing.
+Risk Assessment rates risks by **probability × impact**, producing a scored, prioritized mitigation plan — this category's dedicated tool for "what could go wrong, and in what order should we address it," distinct from Force Field's forces-for-a-change framing.
 
 ### When to Use
 
 - Assessing the risks of a proposed change, migration, or launch before committing to it
 - Prioritizing which risks to mitigate first when time/budget for mitigation is limited
-- Any "what could go wrong, and how bad would it be" question that benefits from a probability x impact score rather than a flat list
+- Any "what could go wrong, and how bad would it be" question that benefits from a probability × impact score rather than a flat list
 
 **Do not use Risk Assessment** for weighing forces for/against a change in general (use `forcefield`) or for root-causing something that already happened (use `fivewhys`/`fishbone`).
 
@@ -310,7 +311,7 @@ Risk Assessment rates risks by **probability x impact**, producing a scored, pri
 
 ### Prose Invariants
 
-- **`score` = `probability` x `impact`.** This is the mode's defining invariant — recompute `score` from `probability` and `impact` before emitting; a `score` that doesn't match its own inputs is the single most common error in this mode.
+- **`score` = `probability` × `impact`.** This is the mode's defining invariant — recompute `score` from `probability` and `impact` before emitting; a `score` that doesn't match its own inputs is the single most common error in this mode.
 - `topRisks[]` entries must match `risks[].risk` verbatim and correspond to the highest-`score` entries.
 - `mitigation` must name a specific, actionable step, not a vague "monitor the situation."
 
@@ -356,7 +357,7 @@ See `reference/output-formats/gapanalysis.md` for the authoritative schema, work
 - Prioritizing the vital few contributors from the trivial many, by value? → **pareto**.
 - Mapping stakeholders by power and interest to plan engagement? → **stakeholder**.
 - Weighing quantified costs against quantified benefits for one option? → **costbenefit**.
-- Rating risks by probability x impact to prioritize mitigation? → **riskassessment**.
+- Rating risks by probability × impact to prioritize mitigation? → **riskassessment**.
 - Mapping current state vs. desired state with a closing action plan? → **gapanalysis**.
 
 These twelve often chain together in a real investigation: `5w1h` to scope an incident, then `fivewhys`/`fishbone` to find the cause (optionally followed by `pareto` to rank which causes carry the most volume), with `swot`/`pestle`/`stakeholder` reserved for strategic/environmental/people assessment, `forcefield`/`decisionmatrix`/`costbenefit`/`riskassessment` reserved for deciding how or what to change once the cause and context are known, and `gapanalysis` for framing the distance between current and target state before any of the above.

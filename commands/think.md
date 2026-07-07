@@ -82,7 +82,7 @@ Parse the arguments above. The first word may be one of the 46 available modes:
 - **`pareto`** — Prioritizing the vital few contributors from the trivial many (80/20, cumulative percentage).
 - **`stakeholder`** — Mapping stakeholders by power and interest, with a per-stakeholder engagement strategy.
 - **`costbenefit`** — Weighing quantified costs against quantified benefits for a single option, with ROI/payback.
-- **`riskassessment`** — Rating risks by probability x impact and prioritizing mitigation by score.
+- **`riskassessment`** — Rating risks by probability × impact and prioritizing mitigation by score.
 - **`gapanalysis`** — Mapping current state vs. desired state across dimensions, with a closing action plan.
 
 If the first word is a recognized mode name, apply that method. If the first word is NOT a mode name (or no mode was given), treat the entire `$ARGUMENTS` as the problem and auto-recommend a mode.

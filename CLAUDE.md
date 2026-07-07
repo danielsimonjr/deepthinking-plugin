@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this plugin is
 
-A Claude Code plugin that teaches Claude **34 structured reasoning modes** (Bayesian, causal, game theory, etc.) as native prompt-based skills. There is no runtime server — Claude learns each method from skill content and produces structured JSON thoughts directly.
+A Claude Code plugin that teaches Claude **46 structured reasoning modes** (Bayesian, causal, game theory, plus a `think-frameworks` category of 12 analytical business/quality frameworks like SWOT and Decision Matrix, etc.) as native prompt-based skills. There is no runtime server — Claude learns each method from skill content and produces structured JSON thoughts directly.
 
 **Current version:** v0.5.4. GitHub: https://github.com/danielsimonjr/deepthinking-plugin.
 
@@ -29,9 +29,9 @@ The MCP repo also hosts `docs/superpowers/plans/` for Phases 1–5 (the original
 
 The MCP's `README.md` and `CHANGELOG.md` now prominently direct users to this plugin via `DEPRECATED.md`. Any new mode work should land here, not there.
 
-## The 34-mode invariant (most important thing to know)
+## The 46-mode invariant (most important thing to know)
 
-The mode set is defined by the filenames in `test/schemas/*.json`. Every mode must appear in **10 places**, and they must stay in sync:
+The mode set is defined by the filenames in `test/schemas/*.json`. Every mode must appear in **10 places**, and they must stay in sync. The set comprises the original 34 modes across 12 categories plus 12 `think-frameworks` modes (`5w1h`, `swot`, `fivewhys`, `fishbone`, `pestle`, `forcefield`, `decisionmatrix`, `pareto`, `stakeholder`, `costbenefit`, `riskassessment`, `gapanalysis`) added as a 13th category:
 
 1. `test/schemas/<mode>.json` — authoritative JSON Schema
 2. `test/samples/<mode>-valid.json` — realistic worked example
@@ -53,7 +53,9 @@ The mode set is defined by the filenames in `test/schemas/*.json`. Every mode mu
 - **Reasoning and visualization are decoupled.** Skills teach reasoning (the JSON shape). Grammars teach rendering (views over that shape). Changing one must not require touching the other. When adding an export format, you do NOT create per-mode files — the `visual-exporter` agent combines existing per-mode semantic grammars with the new surface-syntax grammar at runtime.
 - **Fail loudly.** Silent skips, swallowed exceptions, and default fallbacks are avoided. Where graceful degradation is necessary (e.g., `scripts/render-diagram.py` when `dot`/`mmdc` are missing), it's documented via explicit exit codes (127 missing, 2 with `--allow-skip`, 124 timeout).
 - **Auto-discovery where possible; explicit enforcement where needed.** `harness.py` auto-discovers samples from filename conventions; `test_artifact_consistency.py` explicitly enforces set-equality. Both matter — auto-discovery is a force multiplier but silently tolerates gaps, so the set-equality test is the check that catches drift.
-- **Some validation rules live in SKILL.md prose, not in JSON Schema.** JSON Schema can't express constraints like "exactly one element of this array has `isActual: true`" or "at least two distinct hypotheses with non-equal scores." These invariants live as written instructions in the relevant `skills/think-<category>/SKILL.md` files and are enforced only by the model following the skill prompt. Examples: `counterfactual` requires exactly one condition with `isIntervention: true`; `modal` requires exactly one world with `isActual: true`; `abductive` requires ≥2 distinct hypotheses (the schema only says `minItems: 1`); `historical` requires ≥2 episodes per pattern. **When editing a SKILL.md file, preserve any "must" / "exactly one" / "at least N" language** — those are load-bearing invariants the schema can't catch. The full per-mode catalog is in `docs/SKILL-INVARIANTS.md`.
+- **Some validation rules live in SKILL.md prose, not in JSON Schema.** JSON Schema can't express constraints like "exactly one element of this array has `isActual: true`" or "at least two distinct hypotheses with non-equal scores." These invariants live as written instructions in the relevant `skills/think-<category>/SKILL.md` files and are enforced only by the model following the skill prompt. Examples: `counterfactual` requires exactly one condition with `isIntervention: true`; `modal` requires exactly one world with `isActual: true`; `abductive` requires ≥2 distinct hypotheses (the schema only says `minItems: 1`); `historical` requires ≥2 episodes per pattern; `decisionmatrix` requires exactly one `scores` entry per option with `perCriterion` order matching `criteria` order; `riskassessment` requires `score` to equal `probability × impact`. **When editing a SKILL.md file, preserve any "must" / "exactly one" / "at least N" language** — those are load-bearing invariants the schema can't catch. The full per-mode catalog is in `docs/SKILL-INVARIANTS.md`.
+- **Cognitive bias check is a reference, not a mode.** `skills/think-frameworks/references/cognitive-biases/` (migrated from the standalone `reasoning-skill` plugin) is a pre-commit bias check applied silently to the draft output of the decision modes (`decisionmatrix`, `riskassessment`, `costbenefit`, `swot`) — it does not emit its own thought or appear in the mode set. Don't propose promoting it to a 47th mode; that was declined during the frameworks-into-think design.
+- **Shinka evolutionary-optimization guidance lives inside `algorithmic`, not as a new mode.** `skills/think-engineering/SKILL.md` was enriched with a CLRS algorithm-selection reference (`references/clrs-full-extraction.json`) and a Shinka analyze→scaffold→evolve→inspect→deliver workflow (`references/shinka-evolution.md`), triggered by "optimize / make faster / find a better algorithm" language. This is guidance layered onto the existing `algorithmic` mode — `test/schemas/algorithmic.json` was deliberately left untouched, and there is no separate `shinka` mode in the 46-mode set.
 
 ## Out of scope (don't add these back)
 
@@ -71,7 +73,7 @@ Claude Code has **two completely separate systems** that can both live in a plug
 - **Skills** (`skills/<category>/SKILL.md`) are **automatically invoked** by Claude based on conversation context. They are NOT user-typed and have NO `/command` form. Their job is to inject knowledge into Claude's context when relevant.
 - **Slash commands** (`commands/<name>.md`) are **user-typed** as `/deepthinking-plugin:<name>`. They are thin invocation wrappers that use `$ARGUMENTS` and typically delegate to a skill for the actual knowledge.
 
-**This plugin uses both:** `commands/think.md` is the user-facing slash command; `skills/think/SKILL.md` (and 12 category skills) carry the reasoning knowledge that the command delegates to. The router skill is loaded automatically when the command body asks Claude to think with a specific mode.
+**This plugin uses both:** `commands/think.md` is the user-facing slash command; `skills/think/SKILL.md` (and 13 category skills, including `think-frameworks`) carry the reasoning knowledge that the command delegates to. The router skill is loaded automatically when the command body asks Claude to think with a specific mode.
 
 **If you want to add a new user-facing `/foo` command:** create `commands/foo.md`, NOT `skills/foo/SKILL.md`. Putting it in `skills/` will produce confusing "Unknown skill" errors when a user types `/foo` because skills don't have a slash-command surface. (This was discovered the hard way during v0.1.0 manual testing — see Gotcha #6 below for the matching invocation form caveat.)
 
@@ -82,11 +84,11 @@ Claude Code has **two completely separate systems** that can both live in a plug
 ```bash
 python test/test_plugin_json.py            # plugin.json validity
 python test/test_skill_frontmatter.py      # all SKILL.md frontmatter
-python test/test_artifact_consistency.py   # 34-mode set-equality across dirs
+python test/test_artifact_consistency.py   # 46-mode set-equality across dirs
 python test/test_format_grammars.py        # per-format grammar structure
-python test/harness.py                     # 40 JSON schema validations (34 valid + 6 invalid)
-python test/visual/validate-mermaid.py     # 34 per-mode Mermaid grammars parse
-python test/visual/validate-dot.py         # 34 per-mode DOT grammars parse
+python test/harness.py                     # 52 JSON schema validations (46 valid + 6 invalid)
+python test/visual/validate-mermaid.py     # 46 per-mode Mermaid grammars parse
+python test/visual/validate-dot.py         # 46 per-mode DOT grammars parse
 python test/visual/test-dashboard.py       # HTML dashboard integration
 ```
 
@@ -95,7 +97,7 @@ Run the full fast suite before committing. Most invariant violations surface in 
 ### End-to-end smoke tests (invokes headless `claude -p`)
 
 ```bash
-python test/smoke/run-all-modes.py                        # all 34 modes, ~30–60 min
+python test/smoke/run-all-modes.py                        # all 46 modes, ~30–60 min
 SMOKE_MODE=bayesian python test/smoke/run-all-modes.py    # single mode
 SMOKE_TIMEOUT=300 SMOKE_MODE=analogical python test/smoke/run-all-modes.py  # override timeout for slow modes
 python test/smoke/run-router-tests.py                     # /think auto-recommend tests (~20–40 min)

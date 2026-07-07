@@ -14,7 +14,7 @@ deepthinking-plugin/
 │   └── visual-exporter.md            # subagent: thought JSON → diagram source
 ├── skills/
 │   ├── think/
-│   │   ├── SKILL.md                  # the router (all 34 modes listed)
+│   │   ├── SKILL.md                  # the router (all 46 modes listed)
 │   │   └── mode-index.md             # auto-recommend decision tree
 │   ├── think-core/SKILL.md           # inductive, deductive, abductive
 │   ├── think-standard/SKILL.md       # sequential, shannon, hybrid
@@ -27,23 +27,26 @@ deepthinking-plugin/
 │   ├── think-scientific/SKILL.md     # scientificmethod, systemsthinking, formallogic
 │   ├── think-engineering/SKILL.md    # engineering, algorithmic
 │   ├── think-academic/SKILL.md       # synthesis, argumentation, critique, analysis
-│   └── think-advanced/SKILL.md       # recursive, modal, stochastic
+│   ├── think-advanced/SKILL.md       # recursive, modal, stochastic
+│   └── think-frameworks/SKILL.md     # 5w1h, swot, fivewhys, fishbone, pestle, forcefield,
+│                                      #   decisionmatrix, pareto, stakeholder, costbenefit,
+│                                      #   riskassessment, gapanalysis
 ├── reference/
 │   ├── taxonomy.md                   # canonical mode taxonomy (signals, anti-signals)
 │   ├── visual-grammar.md             # shared visual conventions (shapes, colors, edges)
 │   ├── visual-grammar/
-│   │   ├── <mode>.md × 34            # per-mode semantic grammar (Mermaid + DOT)
+│   │   ├── <mode>.md × 46            # per-mode semantic grammar (Mermaid + DOT)
 │   │   └── formats/
 │   │       └── <format>.md × 9       # per-format surface syntax (ascii, json, …)
 │   ├── output-formats/
-│   │   └── <mode>.md × 34            # authoritative JSON schema + worked example per mode
+│   │   └── <mode>.md × 46            # authoritative JSON schema + worked example per mode
 │   └── html-dashboard-template.html  # interactive dashboard template
 ├── scripts/
 │   ├── render-diagram.py             # wraps graphviz `dot` + mermaid `mmdc`
 │   └── render-html-dashboard.py      # renders thought → standalone HTML file
 ├── test/
-│   ├── schemas/<mode>.json × 34      # JSON Schema per mode
-│   ├── samples/<mode>-valid.json × 34
+│   ├── schemas/<mode>.json × 46      # JSON Schema per mode
+│   ├── samples/<mode>-valid.json × 46
 │   ├── samples/<mode>-invalid.json × 6+  # negative tests for key schemas
 │   ├── harness.py                    # schema validation
 │   ├── test_plugin_json.py           # manifest validation
@@ -78,14 +81,14 @@ deepthinking-plugin/
 - **Verification checklist** — pre-output sanity checks specific to the mode
 - **Worked example** — realistic input → full structured output
 
-Category skills group 2-4 closely related modes. The **router skill** (`skills/think/SKILL.md`) owns the full 34-mode table and decides which category skill to load.
+Category skills group 2-4 closely related modes (the `think-frameworks` category groups all 12 of its analytical-framework modes). The **router skill** (`skills/think/SKILL.md`) owns the full 46-mode table and decides which category skill to load.
 
 ### 2. Output-format grammars (what a mode's output *looks like*)
 
 Reasoning is decoupled from visualization via two kinds of grammar:
 
 - **Per-mode semantic grammar** at `reference/visual-grammar/<mode>.md` — defines the node/edge structure specific to each mode (e.g., Bayesian: hypothesis is root, evidence nodes point to it with likelihood ratios on edges). Contains one Mermaid template and one DOT template with worked examples.
-- **Per-format surface syntax** at `reference/visual-grammar/formats/<format>.md` — defines how to encode ANY mode's semantic structure into that format (e.g., GraphML: use `<node>`/`<edge>` with `<data>` children for attributes). Contains shared encoding rules applicable across all 34 modes.
+- **Per-format surface syntax** at `reference/visual-grammar/formats/<format>.md` — defines how to encode ANY mode's semantic structure into that format (e.g., GraphML: use `<node>`/`<edge>` with `<data>` children for attributes). Contains shared encoding rules applicable across all 46 modes.
 
 The `visual-exporter` agent combines both: it reads the mode's semantic grammar to know WHAT to encode, and the format's surface grammar to know HOW.
 
@@ -102,7 +105,7 @@ The `visual-exporter` agent combines both: it reads the mode's semantic grammar 
 1. User → /think bayesian "Is X caused by Y?"
 2. Claude Code loads commands/think.md → expands $ARGUMENTS
 3. The command body instructs Claude to load skills/think/SKILL.md (router)
-4. Router looks up mode in the 34-row table → delegates to skills/think-probabilistic/SKILL.md
+4. Router looks up mode in the 46-row table → delegates to skills/think-probabilistic/SKILL.md
 5. Category skill teaches the method → Claude produces a structured JSON thought
 6. Output: meta sentence + JSON code block + natural-language summary
 ```
@@ -162,7 +165,7 @@ python test/visual/validate-dot.py
 python test/visual/test-dashboard.py
 
 # End-to-end smoke (invokes claude -p — ~30-60 minutes full, or single-mode):
-python test/smoke/run-all-modes.py          # all 34 modes
+python test/smoke/run-all-modes.py          # all 46 modes
 SMOKE_MODE=bayesian python test/smoke/run-all-modes.py  # just one
 
 # Router auto-recommend tests (~20-40 minutes full):
