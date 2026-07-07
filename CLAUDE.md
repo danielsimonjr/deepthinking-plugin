@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Claude Code plugin that teaches Claude **46 structured reasoning modes** (Bayesian, causal, game theory, plus a `think-frameworks` category of 12 analytical business/quality frameworks like SWOT and Decision Matrix, etc.) as native prompt-based skills. There is no runtime server — Claude learns each method from skill content and produces structured JSON thoughts directly.
 
-**Current version:** v0.5.4. GitHub: https://github.com/danielsimonjr/deepthinking-plugin.
+**Current version:** v0.6.0. GitHub: https://github.com/danielsimonjr/deepthinking-plugin.
 
 **Read before making changes:**
 - `ARCHITECTURE.md` — the three-layer design (reasoning skills / output-format grammars / runtime helpers) and invocation flow diagrams

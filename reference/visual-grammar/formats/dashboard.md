@@ -290,7 +290,7 @@ The user opens `/tmp/bayesian-memory-leak-dashboard.html` in any browser. The da
 
 ## Per-Mode Considerations
 
-### All 34 Modes
+### All 46 Modes
 
 **Every mode** can produce a viable dashboard. The quality scales with the richness of the thought's structure and diagram:
 
@@ -314,7 +314,7 @@ The template applies mode-specific colors and icons:
 - **Systems Thinking**: Teal (`#06b6d4`) with feedback icon (↩️)
 - **Sequential**: Green (`#22c55e`) with arrow icon (→)
 - **GameTheory**: Orange (`#f59e0b`) with strategy icon (♞)
-- And so on for all 34 modes
+- And so on for all 46 modes
 
 The render script looks up the mode in a mode-to-color mapping and injects the corresponding CSS.
 

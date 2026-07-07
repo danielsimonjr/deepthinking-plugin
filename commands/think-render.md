@@ -7,7 +7,7 @@ The user invoked `/think-render` with arguments: `$ARGUMENTS`
 
 ## What to do
 
-1. **Find the most recent /think output in this conversation.** Look for a JSON code block matching one of the 34 mode schemas (any object with a `mode` field whose value is a recognized mode slug). If multiple recent outputs exist, use the latest one. If an array of thoughts exists (as for sequential or shannon chains), treat the whole array as the target.
+1. **Find the most recent /think output in this conversation.** Look for a JSON code block matching one of the 46 mode schemas (any object with a `mode` field whose value is a recognized mode slug). If multiple recent outputs exist, use the latest one. If an array of thoughts exists (as for sequential or shannon chains), treat the whole array as the target.
 
 2. **Parse the mode** from the JSON's `mode` field (or the first thought's `mode` if it's an array).
 
@@ -41,4 +41,4 @@ Respond: "No recent `/think` output found in this conversation. Run `/think <mod
 
 ## Fallback when the mode has no grammar file
 
-If `reference/visual-grammar/<mode>.md` doesn't exist (should not happen in v0.4.0 — all 34 modes have grammar files), fall back to a generic DAG rendering: each top-level field of the JSON as a node, nested objects as subgraphs, arrays as parallel sibling nodes.
+If `reference/visual-grammar/<mode>.md` doesn't exist (should not happen in v0.6.0 — all 46 modes have grammar files), fall back to a generic DAG rendering: each top-level field of the JSON as a node, nested objects as subgraphs, arrays as parallel sibling nodes.

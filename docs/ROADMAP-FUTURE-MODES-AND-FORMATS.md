@@ -1,5 +1,7 @@
 # Roadmap: Reasoning Modes and Output Formats — Future Work
 
+> Superseded by v0.6.0 — the 12 analytical-framework modes shipped (46 modes total).
+
 This document lists reasoning mode and output format candidates that are NOT yet part of the plugin, with tier assignments and rationale. Each entry is a forward-looking proposal. The canonical sets below describe what is currently shipped.
 
 ## Methodology
