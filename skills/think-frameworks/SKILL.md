@@ -28,7 +28,7 @@ These rules apply to every mode in this category:
 
 ### Bias Check
 
-Before finalizing any framework output, check it against the cognitive-bias reference at `references/cognitive-biases/` (populated in Task 4 of this project). Common biases specific to this category: confirmation bias when populating SWOT opportunities/threats, availability bias when enumerating fishbone causes (favoring recently-seen causes over structurally likely ones), and premature convergence in 5 Whys (stopping at a comfortable answer instead of a genuine process-level root cause).
+Before finalizing output from any of the **decision modes** (`decisionmatrix`, `riskassessment`, `costbenefit`, `swot`), run a pre-commit bias check against `references/cognitive-biases/COGNITIVE_BIASES_FRAMEWORK.md` (the full bias taxonomy) and `references/cognitive-biases/bias_detection_guide.md` (how to spot them in your own draft output before finalizing). This is a check, not a mode — do not emit a separate bias-check thought; apply it silently to the draft before returning the framework's own JSON. Common biases specific to this category: confirmation bias when populating SWOT opportunities/threats, availability bias when enumerating fishbone causes (favoring recently-seen causes over structurally likely ones), premature convergence in 5 Whys (stopping at a comfortable answer instead of a genuine process-level root cause), anchoring in Decision Matrix scoring (first-scored option or criterion pulling later scores toward it), and optimism bias in Cost-Benefit and Risk Assessment (understating costs/risks or overstating benefits/probabilities). See also `references/cognitive-biases/bias_mitigation_strategies.md` and `references/cognitive-biases/debiasing_examples.md` for concrete mitigation techniques.
 
 ---
 
@@ -54,7 +54,7 @@ Before finalizing any framework output, check it against the cognitive-bias refe
 - Every one of the six dimensions must be populated — a dimension that is genuinely unknown should contain `"unknown"` or `"not yet determined"`, never be silently thin.
 - `why` here is the *currently understood* reason, not a drilled-down root cause — if the user needs a root cause, hand off to `fivewhys` after scoping.
 
-See `reference/output-formats/5w1h.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/5w1h.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive (background, extended examples, common pitfalls), see `references/01-5w1h.md`.
 
 ---
 
@@ -80,7 +80,7 @@ SWOT assesses **strategic position** by crossing two axes — Internal vs. Exter
 - `strengths`/`weaknesses` must be genuinely internal (about the subject itself); `opportunities`/`threats` must be genuinely external (about the environment). Do not put a competitor's move in `weaknesses` — that's a `threat`.
 - `recommendation` (optional but encouraged) should cross quadrants — e.g., use a strength to capture an opportunity, or flag where a weakness blocks an opportunity — not just restate the subject.
 
-See `reference/output-formats/swot.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/swot.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/02-swot.md`.
 
 ---
 
@@ -105,7 +105,7 @@ See `reference/output-formats/swot.md` for the authoritative schema, worked exam
 - `rootCause` must match (or closely match) the final `whys` entry's `answer`.
 - `rootCause` should name a process/system-level cause, not a person — "the engineer made a mistake" is not a root cause; "no process caught the mistake before it shipped" is.
 
-See `reference/output-formats/fivewhys.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/fivewhys.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/03-root-cause-5-whys.md`.
 
 ---
 
@@ -131,7 +131,7 @@ Fishbone (Ishikawa) diagrams cause analysis into **multiple independent categori
 - `primaryCauses` (optional), if present, must cross-reference causes that also appear verbatim within `categories[].causes[]` — it highlights priority causes, it does not introduce new ones.
 - Causes must be specific and evidence-based — "process issues" is too generic; name the actual broken process.
 
-See `reference/output-formats/fishbone.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/fishbone.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/04-fishbone-ishikawa.md`.
 
 ---
 
@@ -157,7 +157,7 @@ PESTLE scans the **external macro-environment** across six categories — Politi
 - Every factor must be external to the subject — internal capabilities and gaps belong in `swot`, not here.
 - `keyFactors` (optional), if present, synthesizes across lanes (a factor commonly spans more than one category, e.g., a regulation that is both Legal and Technological) and should end with something actionable per the category's Output Quality Rules.
 
-See `reference/output-formats/pestle.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/pestle.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/05-pestle.md`.
 
 ---
 
@@ -183,7 +183,7 @@ Force Field Analysis weighs **driving forces** for a proposed change against **r
 - `recommendation` (optional but encouraged) must target the *specific* highest-strength restraining force(s) to address, or driving force(s) to reinforce — not a vague call to "manage change better," per the category's "end with an action" rule.
 - Do not double-count a single underlying issue as both a driving and a restraining force in disguised form.
 
-See `reference/output-formats/forcefield.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/forcefield.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/06-force-field.md`.
 
 ---
 
@@ -209,7 +209,7 @@ Decision Matrix compares **multiple options** against **multiple weighted criter
 - **Show weights × scores.** Per this category's Output Quality Rule #2, `total` must be shown as the derived weighted sum (`perCriterion[i] × criteria[i].weight`, summed), not asserted as a bare number — the recommendation must include this arithmetic so it can be checked.
 - `perCriterion` arrays must match `criteria`'s length and order for every option — a silent misalignment corrupts the math even though the schema can't detect it.
 
-See `reference/output-formats/decisionmatrix.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/decisionmatrix.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/07-decision-matrix.md`.
 
 ---
 
@@ -236,7 +236,7 @@ Pareto analysis ranks contributors by value and identifies the **"vital few"** r
 - If `cumulativePercent` is present, it must be correctly computed from `items[].value` and monotonically non-decreasing, ending at (approximately) 100.
 - `recommendation` (optional but encouraged) should state roughly what share of total value `vitalFew` covers, per the category's "end with an action" rule.
 
-See `reference/output-formats/pareto.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/pareto.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/08-pareto.md`.
 
 ---
 
@@ -262,7 +262,7 @@ Stakeholder Analysis maps everyone affected by or influencing a decision onto a 
 - `strategy` must be specific to the stakeholder's quadrant, not a generic line copy-pasted across every stakeholder.
 - `recommendation` (optional but encouraged) should synthesize across quadrants — who to prioritize, who to deprioritize — per the category's "end with an action" rule.
 
-See `reference/output-formats/stakeholder.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/stakeholder.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/09-stakeholder.md`.
 
 ---
 
@@ -288,7 +288,7 @@ Cost-Benefit Analysis weighs **quantified costs against quantified benefits** fo
 - If `roi` is present, state what period it covers — an ROI percentage without a stated time horizon is ambiguous.
 - `recommendation` must make an explicit go/no-go/conditional call, per the category's "end with an action" rule.
 
-See `reference/output-formats/costbenefit.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/costbenefit.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/10-cost-benefit.md`.
 
 ---
 
@@ -314,7 +314,7 @@ Risk Assessment rates risks by **probability x impact**, producing a scored, pri
 - `topRisks[]` entries must match `risks[].risk` verbatim and correspond to the highest-`score` entries.
 - `mitigation` must name a specific, actionable step, not a vague "monitor the situation."
 
-See `reference/output-formats/riskassessment.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/riskassessment.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/11-risk-assessment.md`.
 
 ---
 
@@ -340,7 +340,7 @@ Gap Analysis maps **current state vs. desired state** across named dimensions, e
 - `gap` must name the actual delta, not just juxtapose current and desired with no synthesis.
 - `action` must be specific and closable; if `actionPlan` is present, it sequences the per-dimension actions into a realistic execution order across dimensions.
 
-See `reference/output-formats/gapanalysis.md` for the authoritative schema, worked example, and verification checklist.
+See `reference/output-formats/gapanalysis.md` for the authoritative schema, worked example, and verification checklist. For a fuller teaching deep-dive, see `references/12-gap-analysis.md`.
 
 ---
 
