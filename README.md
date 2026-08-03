@@ -1,4 +1,28 @@
-# deepthinking-plugin
+# deepthinking-plugin — ARCHIVED, merged into deepthinking-mcp
+
+> ## ⚠️ This repository is archived and read-only as of 2026-08-03.
+>
+> **Everything here now lives in [danielsimonjr/deepthinking-mcp](https://github.com/danielsimonjr/deepthinking-mcp)**,
+> which ships the MCP server *and* these reasoning skills as a single Claude Code plugin.
+>
+> Splitting the reasoning methodology from the server that serves it was the wrong shape. This
+> repo briefly *replaced* `deepthinking-mcp` (which was deprecated on 2026-04-12); that
+> deprecation has since been reversed and the two were merged instead.
+>
+> | Transferred | Where it is now |
+> |---|---|
+> | `/think`, `/think-render` | `deepthinking-mcp/commands/` — canonically `/deepthinking-mcp:think` |
+> | 14 skills, 46 modes | `deepthinking-mcp/skills/` |
+> | `visual-exporter` subagent | `deepthinking-mcp/agents/` |
+> | 106 reference/grammar files | `deepthinking-mcp/reference/` |
+> | render scripts | `deepthinking-mcp/scripts/` |
+> | test harness (186 files) | `deepthinking-mcp/test/` |
+> | design docs + this CHANGELOG | `deepthinking-mcp/docs/skills/` |
+>
+> **Install:** the `deepthinking-mcp` plugin from `local-marketplace`. Nothing needs to be
+> installed from here. No further changes will be made to this repository.
+
+---
 
 Structured reasoning methods for Claude Code. This plugin teaches Claude 46 reasoning modes (Bayesian inference, causal analysis, game theory, and a `think-frameworks` category of 12 analytical business/quality frameworks like SWOT, 5 Whys, and Decision Matrix, etc.) as native skills. Unlike the original `deepthinking-mcp` TypeScript server, no external runtime is required — Claude learns each method from skill content and produces the structured output directly.
 
